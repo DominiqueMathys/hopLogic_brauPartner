@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { ApiError, changeOrderStatus, fetchOrder } from '../../api/sales.ts'
 import { BoundaryNotice } from '../../components/sales/BoundaryNotice.tsx'
+import { OrderComplaints } from '../../components/service/RelatedService.tsx'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
 import { buttonStyles } from '../../components/ui/button-styles.ts'
@@ -154,6 +155,9 @@ export function OrderDetailPage() {
       ) : (
         <p className="text-sm text-muted">Für diesen Status ist kein weiterer Wechsel vorgesehen.</p>
       )}
+      <Card className="p-4">
+        <OrderComplaints orderId={order.id} />
+      </Card>
       <ConfirmDialog
         open={nextStatus !== null}
         title="Status ändern"

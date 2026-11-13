@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     environment: str = "development"
     database_url: str
     cors_origins: str = "http://localhost:5173"
+    ticket_upload_dir: str = "data/ticket-attachments"
+    ticket_max_bytes: int = 5_242_880
 
     @property
     def cors_origin_list(self) -> list[str]:

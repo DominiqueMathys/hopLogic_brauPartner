@@ -6,6 +6,7 @@ from app.api.contacts import router as contacts_router
 from app.api.health import router as health_router
 from app.api.partners import router as partners_router
 from app.api.sales import deals_router, orders_router, products_router
+from app.api.service import analysis_router, segments_router, tickets_router
 from app.api.tasks import router as tasks_router
 from app.config import settings
 
@@ -27,6 +28,9 @@ app.include_router(tasks_router, prefix="/api")
 app.include_router(deals_router, prefix="/api")
 app.include_router(products_router, prefix="/api")
 app.include_router(orders_router, prefix="/api")
+app.include_router(tickets_router, prefix="/api")
+app.include_router(segments_router, prefix="/api")
+app.include_router(analysis_router, prefix="/api")
 
 
 @app.get("/")

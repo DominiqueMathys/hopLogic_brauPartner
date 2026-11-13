@@ -123,6 +123,7 @@ export function LinkedTasks({ partnerId, contactId }: Scope) {
       partnerId: partnerId ?? '',
       contactId: contactId ?? '',
       due: '',
+      serviceOnly: false,
       page: 1,
     })
       .then((result) => {

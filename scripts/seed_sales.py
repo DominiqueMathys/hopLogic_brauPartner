@@ -10,6 +10,7 @@ from app.database import SessionLocal
 from app.seed_crm import seed_demo_crm
 from app.seed_partners import seed_demo_partners
 from app.seed_sales import seed_demo_sales
+from app.seed_service import seed_demo_service
 from app.services.crm import CrmServiceError
 from app.services.partners import PartnerServiceError
 
@@ -20,6 +21,7 @@ def main() -> int:
         partners = seed_demo_partners(session)
         crm_records = seed_demo_crm(session)
         sales_records = seed_demo_sales(session)
+        service_records = seed_demo_service(session)
         session.commit()
     except (PartnerServiceError, CrmServiceError) as error:
         session.rollback()
@@ -35,7 +37,8 @@ def main() -> int:
     finally:
         session.close()
     print(f"{partners} Partner, {crm_records} CRM-Datensätze und {sales_records} Verkaufsdatensätze sind als Testdaten gespeichert.")
-    print("Preise und Artikel sind fiktiv. Die Demo-Bestellung wird nicht ins ERP übertragen.")
+    print(f"{service_records} Service- und Segmentdatensätze sind als fiktive Reklamation gespeichert.")
+    print("Preise, Artikel und die Reklamation sind fiktiv. Es entsteht kein ERP-Vorgang.")
     return 0
 
 

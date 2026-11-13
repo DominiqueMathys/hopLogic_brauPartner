@@ -2,13 +2,13 @@ import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { LinkedActivities, LinkedTasks, PartnerContacts } from '../../components/crm/LinkedRecords.tsx'
 import { PartnerDeals, PartnerOrders } from '../../components/sales/RelatedRecords.tsx'
+import { PartnerAnalysisPanel, PartnerService } from '../../components/service/RelatedService.tsx'
 import { ApiError, archivePartner, restorePartner } from '../../api/partners.ts'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
 import { buttonStyles } from '../../components/ui/button-styles.ts'
 import { Card } from '../../components/ui/Card.tsx'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog.tsx'
-import { EmptyState } from '../../components/ui/EmptyState.tsx'
 import { ErrorState } from '../../components/ui/ErrorState.tsx'
 import { LoadingState } from '../../components/ui/LoadingState.tsx'
 import { Tabs } from '../../components/ui/Tabs.tsx'
@@ -160,12 +160,12 @@ export function PartnerDetailPage() {
             {
               id: 'service',
               label: 'Kundenservice',
-              content: (
-                <NotReady
-                  title="Kundenservice noch nicht implementiert"
-                  description="Reklamationen und Support-Tickets folgen später. Es werden keine Tickets angezeigt."
-                />
-              ),
+              content: <PartnerService partnerId={partner.id} />,
+            },
+            {
+              id: 'analysis',
+              label: 'Kundenanalyse',
+              content: <PartnerAnalysisPanel partnerId={partner.id} />,
             },
           ]}
         />
@@ -261,6 +261,3 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function NotReady({ title, description }: { title: string; description: string }) {
-  return <EmptyState title={title} description={description} />
-}

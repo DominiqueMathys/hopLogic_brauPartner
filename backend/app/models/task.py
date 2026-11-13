@@ -46,6 +46,7 @@ class Task(Base):
     partner_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("vertriebspartner.id", ondelete="RESTRICT"))
     contact_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("kontakte.id", ondelete="RESTRICT"))
     activity_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("aktivitaeten.id", ondelete="RESTRICT"))
+    ticket_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("service_tickets.id", ondelete="RESTRICT"))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     is_demo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
     demo_key: Mapped[str | None] = mapped_column(String(80))

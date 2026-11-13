@@ -544,6 +544,7 @@ def read_tasks(db: Session, rows: list[Task]) -> list[TaskRead]:
                 partner_id=row.partner_id,
                 contact_id=row.contact_id,
                 activity_id=row.activity_id,
+                ticket_id=row.ticket_id,
                 company_name=partners.get(row.partner_id) if row.partner_id else None,
                 contact_name=contacts.get(row.contact_id) if row.contact_id else None,
                 completed_at=row.completed_at,
@@ -616,6 +617,7 @@ def query_tasks(
     partner_id: UUID | None,
     contact_id: UUID | None,
     due: str | None,
+    service_only: bool,
     page: int,
     page_size: int,
 ) -> tuple[list[Task], int]:
@@ -643,6 +645,8 @@ def query_tasks(
     elif due == "urgent":
         filters.append(Task.status.in_(OPEN_TASK_STATUSES))
         filters.append(Task.priority == "dringend")
+    if service_only:
+        filters.append(Task.ticket_id.is_not(None))
     if q and q.strip():
         pattern = contains_pattern(q.strip())
         filters.append(or_(Task.title.ilike(pattern, escape="\\"), Task.description.ilike(pattern, escape="\\")))

@@ -99,6 +99,16 @@ export function TasksIcon(props: IconProps) {
   )
 }
 
+export function SegmentsIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <circle cx="8" cy="8" r="2.2" />
+      <circle cx="16" cy="8" r="2.2" />
+      <circle cx="12" cy="15.5" r="2.2" />
+    </IconFrame>
+  )
+}
+
 export function ServiceIcon(props: IconProps) {
   return (
     <IconFrame {...props}>
@@ -185,6 +195,7 @@ const navIcons = {
   activities: ActivitiesIcon,
   tasks: TasksIcon,
   service: ServiceIcon,
+  segments: SegmentsIcon,
   materials: MaterialsIcon,
   reporting: ReportingIcon,
   settings: SettingsIcon,

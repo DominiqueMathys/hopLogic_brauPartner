@@ -71,8 +71,15 @@ export const navigation: NavItem[] = [
     id: 'service',
     label: 'Kundenservice',
     path: '/kundenservice',
-    summary: 'Serviceanfragen und Tickets.',
-    phase: 'planned',
+    summary: 'Serviceanfragen, Reklamationen und Tickets.',
+    phase: 'available',
+  },
+  {
+    id: 'segments',
+    label: 'Segmente',
+    path: '/segmente',
+    summary: 'Partnergruppen aus aktuellen CRM-Daten.',
+    phase: 'available',
   },
   {
     id: 'materials',

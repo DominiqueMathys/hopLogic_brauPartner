@@ -4,6 +4,7 @@ import { ApiError, archiveContact, linkContactCompany, makePrimaryContact, resto
 import { fetchPartners } from '../../api/partners.ts'
 import { LinkedActivities, LinkedTasks } from '../../components/crm/LinkedRecords.tsx'
 import { ContactSales } from '../../components/sales/RelatedRecords.tsx'
+import { ContactService } from '../../components/service/RelatedService.tsx'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
 import { buttonStyles } from '../../components/ui/button-styles.ts'
@@ -165,12 +166,7 @@ export function ContactDetailPage() {
             {
               id: 'service',
               label: 'Servicefälle',
-              content: (
-                <EmptyState
-                  title="Servicefälle noch nicht implementiert"
-                  description="Reklamationen und Tickets folgen später. Es werden keine Fälle angezeigt."
-                />
-              ),
+              content: <ContactService contactId={contact.id} />,
             },
           ]}
         />

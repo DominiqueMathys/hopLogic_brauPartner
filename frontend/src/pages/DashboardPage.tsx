@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { fetchActivities, fetchTaskSummary, fetchTasks } from '../api/crm.ts'
 import { fetchPartnerSummary } from '../api/partners.ts'
 import { fetchDealSummary, fetchOrderSummary } from '../api/sales.ts'
+import { fetchSegments, fetchTicketSummary } from '../api/service.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { DataTable, type DataColumn } from '../components/ui/DataTable.tsx'
@@ -11,6 +12,7 @@ import { LoadingState } from '../components/ui/LoadingState.tsx'
 import { labelOf, taskPriorityOptions, type Activity, type Task, type TaskSummary } from '../domain/crm.ts'
 import { formatDateTime, type PartnerSummary } from '../domain/partners.ts'
 import { formatChf, type DealSummary, type OrderSummary } from '../domain/sales.ts'
+import type { Segment, TicketSummary } from '../domain/service.ts'
 import { navigation, type NavItem } from '../navigation.ts'
 import { usePageTitle } from '../usePageTitle.ts'
 
@@ -229,6 +231,75 @@ function TaskSignals() {
   )
 }
 
+function ServiceSignals() {
+  const [summary, setSummary] = useState<TicketSummary | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void fetchTicketSummary()
+      .then((result) => {
+        if (active) setSummary(result)
+      })
+      .catch(() => {
+        if (active) setFailed(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (failed) {
+    return <EmptyState compact title="Servicekennzahlen nicht verfügbar" description="Die Tickets konnten nicht gelesen werden." />
+  }
+  if (!summary) return <LoadingState label="Servicekennzahlen werden geladen" />
+
+  return (
+    <>
+      <Metric title="Offene Reklamationen" value={String(summary.open_complaints)} note="Offene Tickets zu Lieferung oder Produktqualität." to="/kundenservice?ansicht=open" />
+      <Metric title="Kritische Service-Tickets" value={String(summary.critical_count)} note="Offene Tickets mit Priorität kritisch." to="/kundenservice?prioritaet=kritisch&ansicht=open" />
+      <Metric title="Überfällige Serviceaufgaben" value={String(summary.overdue_service_tasks)} note="Offene Aufgaben mit Ticketbezug, deren Fälligkeit vor jetzt liegt." to="/aufgaben?faellig=overdue&service=1" />
+      <Metric title="Partner mit offenen Reklamationen" value={String(summary.partners_with_complaints)} note="Unterschiedliche Partner mit mindestens einer offenen Reklamation." to="/segmente" />
+    </>
+  )
+}
+
+function SegmentOverview() {
+  const [items, setItems] = useState<Segment[] | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void fetchSegments()
+      .then((result) => {
+        if (active) setItems(result)
+      })
+      .catch(() => {
+        if (active) setFailed(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (failed) return <EmptyState compact title="Segmente nicht verfügbar" description="Die Segmentdefinitionen konnten nicht gelesen werden." />
+  if (!items) return <LoadingState label="Segmente werden geladen" />
+  if (items.length === 0) return <EmptyState compact title="Keine Segmente" description="Es ist noch keine Segmentdefinition gespeichert." />
+
+  return (
+    <ul className="grid gap-2 sm:grid-cols-2">
+      {items.map((segment) => (
+        <li key={segment.id}>
+          <Link to={`/segmente/${segment.id}`} className="flex items-center justify-between gap-3 border border-line px-4 py-3 hover:border-petrol">
+            <span className="font-semibold">{segment.name}</span>
+            <span className="text-sm">{segment.partner_count}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function Signal({ label, value, to }: { label: string; value: number; to: string }) {
   return (
     <Link to={to} className="border border-line px-4 py-3 hover:border-petrol">
@@ -283,7 +354,7 @@ function OpenTasks() {
 
   useEffect(() => {
     let active = true
-    void fetchTasks({ q: '', status: '', priority: '', accountOwner: '', partnerId: '', contactId: '', due: 'open', page: 1 })
+    void fetchTasks({ q: '', status: '', priority: '', accountOwner: '', partnerId: '', contactId: '', due: 'open', serviceOnly: false, page: 1 })
       .then((result) => {
         if (active) {
           setRows(result.items.slice(0, 5))
@@ -336,11 +407,15 @@ export function DashboardPage() {
         </h2>
         <ActivePartnersCard />
         <SalesKpis />
-        <Card className="p-4">
-          <h3 className="text-sm font-semibold">Offene Service-Tickets</h3>
-          <EmptyState compact title="Keine Werte" description="Für diese Kennzahl liegen noch keine Datenbankwerte vor." />
-        </Card>
+        <ServiceSignals />
       </section>
+
+      <Card className="p-4">
+        <h2 className="text-base font-semibold">Partnersegmente</h2>
+        <div className="mt-3">
+          <SegmentOverview />
+        </div>
+      </Card>
 
       <Card className="p-4">
         <h2 className="text-base font-semibold">Aufgabenhinweise</h2>

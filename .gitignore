@@ -23,6 +23,7 @@ dist-ssr/
 # Daten und Logs
 *.log
 postgres-data/
+data/ticket-attachments/
 
 # Betriebssystem und Editoren
 .DS_Store

@@ -71,6 +71,7 @@ class TaskRead(BaseModel):
     partner_id: UUID | None
     contact_id: UUID | None
     activity_id: UUID | None
+    ticket_id: UUID | None = None
     company_name: str | None
     contact_name: str | None
     completed_at: datetime | None

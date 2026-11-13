@@ -23,6 +23,7 @@ function readQuery(params: URLSearchParams): TaskQuery {
     partnerId: '',
     contactId: '',
     due: params.get('faellig') ?? '',
+    serviceOnly: params.get('service') === '1',
     page: Number.isInteger(page) && page > 0 ? page : 1,
   }
 }

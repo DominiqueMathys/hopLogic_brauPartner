@@ -23,6 +23,8 @@ function pageTrail(pathname: string): string[] {
     ...detailTrail(pathname, '/verkaufschancen', { create: 'Neue Verkaufschance', edit: 'Bearbeiten', detail: 'Verkaufschance' }),
     ...detailTrail(pathname, '/produkte', { create: 'Neues Produkt', edit: 'Bearbeiten', detail: 'Produkt' }),
     ...detailTrail(pathname, '/bestellungen', { create: 'Neue Bestellung', edit: 'Bearbeiten', detail: 'Bestellung' }),
+    ...detailTrail(pathname, '/kundenservice', { create: 'Neues Ticket', edit: 'Bearbeiten', detail: 'Ticket' }),
+    ...detailTrail(pathname, '/segmente', { create: 'Neues Segment', edit: 'Bearbeiten', detail: 'Segment' }),
     ...detailTrail(pathname, '/kontakte', { create: 'Neuer Kontakt', edit: 'Bearbeiten', detail: 'Kontakt' }),
     ...detailTrail(pathname, '/aktivitaeten', { create: 'Neue Aktivität', edit: 'Bearbeiten', detail: 'Aktivität' }),
     ...detailTrail(pathname, '/aufgaben', { create: 'Neue Aufgabe', edit: 'Bearbeiten', detail: 'Aufgabe' }),

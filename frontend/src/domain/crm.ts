@@ -169,6 +169,7 @@ export type TaskQuery = {
   partnerId: string
   contactId: string
   due: string
+  serviceOnly: boolean
   page: number
 }
 

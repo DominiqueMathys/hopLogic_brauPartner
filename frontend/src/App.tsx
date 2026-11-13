@@ -27,6 +27,10 @@ import { OrderDetailPage } from './pages/orders/OrderDetailPage.tsx'
 import { OrderListPage } from './pages/orders/OrderListPage.tsx'
 import { ProductCreatePage, ProductEditPage } from './pages/products/ProductFormPage.tsx'
 import { ProductListPage } from './pages/products/ProductListPage.tsx'
+import { SegmentCreatePage, SegmentDetailPage, SegmentEditPage, SegmentListPage } from './pages/segments/SegmentPages.tsx'
+import { TicketCreatePage, TicketEditPage } from './pages/service/TicketFormPage.tsx'
+import { TicketDetailPage } from './pages/service/TicketDetailPage.tsx'
+import { TicketListPage } from './pages/service/TicketListPage.tsx'
 import { SettingsPage } from './pages/SettingsPage.tsx'
 
 export default function App() {
@@ -65,6 +69,14 @@ export default function App() {
               <Route path="bestellungen/:orderId/bearbeiten" element={<OrderEditPage />} />
               <Route path="bestellungen/:orderId" element={<OrderDetailPage />} />
               <Route path="bestellungen" element={<OrderListPage />} />
+              <Route path="kundenservice/neu" element={<TicketCreatePage />} />
+              <Route path="kundenservice/:ticketId/bearbeiten" element={<TicketEditPage />} />
+              <Route path="kundenservice/:ticketId" element={<TicketDetailPage />} />
+              <Route path="kundenservice" element={<TicketListPage />} />
+              <Route path="segmente/neu" element={<SegmentCreatePage />} />
+              <Route path="segmente/:segmentId/bearbeiten" element={<SegmentEditPage />} />
+              <Route path="segmente/:segmentId" element={<SegmentDetailPage />} />
+              <Route path="segmente" element={<SegmentListPage />} />
               {modules.map((item) => (
                 <Route key={item.id} path={item.path.slice(1)} element={<ModulePage item={item} />} />
               ))}

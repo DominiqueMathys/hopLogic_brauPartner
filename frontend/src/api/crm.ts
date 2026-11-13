@@ -345,6 +345,7 @@ export async function fetchTasks(query: TaskQuery): Promise<TaskList> {
   if (query.partnerId) params.set('partner_id', query.partnerId)
   if (query.contactId) params.set('contact_id', query.contactId)
   if (query.due) params.set('due', query.due)
+  if (query.serviceOnly) params.set('service_only', 'true')
   if (query.page > 1) params.set('page', String(query.page))
   params.set('page_size', '20')
   return readPaged(await request(`/api/tasks?${params.toString()}`), readTask)

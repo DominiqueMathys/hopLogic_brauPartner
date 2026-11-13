@@ -40,6 +40,7 @@ def list_tasks(
     partner_id: UUID | None = None,
     contact_id: UUID | None = None,
     due: str | None = None,
+    service_only: bool = False,
     page: int = 1,
     page_size: int = 20,
     db: Session = Depends(get_db),
@@ -63,6 +64,7 @@ def list_tasks(
         partner_id=partner_id,
         contact_id=contact_id,
         due=due or None,
+        service_only=service_only,
         page=page,
         page_size=page_size,
     )
