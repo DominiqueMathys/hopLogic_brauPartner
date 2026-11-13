@@ -1,0 +1,4 @@
+Alembic migrations for HopLogic BrauPartner.
+
+Run commands from the backend directory. The database URL comes from the
+project root `.env` or the `DATABASE_URL` environment variable.

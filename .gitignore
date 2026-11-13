@@ -1,0 +1,33 @@
+# Zugangsdaten und lokale Umgebung
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+
+# Daten und Logs
+*.log
+postgres-data/
+
+# Betriebssystem und Editoren
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.sw?

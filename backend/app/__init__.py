@@ -1,0 +1,1 @@
+"""HopLogic BrauPartner API."""

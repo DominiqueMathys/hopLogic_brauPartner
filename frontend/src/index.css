@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --color-paper: #f4efe6;
+  --color-ink: #241c16;
+  --color-copper: #9a4f28;
+  --color-moss: #2f6b45;
+  --color-wine: #8d2f2f;
+  --color-line: #e0d5c6;
+  --color-card: #fffaf4;
+  --color-muted: #6f6256;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
