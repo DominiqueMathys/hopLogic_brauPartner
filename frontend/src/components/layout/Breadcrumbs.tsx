@@ -15,8 +15,14 @@ function detailTrail(pathname: string, root: string, labels: { create: string; e
 }
 
 function pageTrail(pathname: string): string[] {
+  if (pathname === '/verkaufschancen/pipeline') {
+    return ['Pipeline']
+  }
   return [
     ...detailTrail(pathname, '/vertriebspartner', { create: 'Neuer Partner', edit: 'Bearbeiten', detail: 'Partner' }),
+    ...detailTrail(pathname, '/verkaufschancen', { create: 'Neue Verkaufschance', edit: 'Bearbeiten', detail: 'Verkaufschance' }),
+    ...detailTrail(pathname, '/produkte', { create: 'Neues Produkt', edit: 'Bearbeiten', detail: 'Produkt' }),
+    ...detailTrail(pathname, '/bestellungen', { create: 'Neue Bestellung', edit: 'Bearbeiten', detail: 'Bestellung' }),
     ...detailTrail(pathname, '/kontakte', { create: 'Neuer Kontakt', edit: 'Bearbeiten', detail: 'Kontakt' }),
     ...detailTrail(pathname, '/aktivitaeten', { create: 'Neue Aktivität', edit: 'Bearbeiten', detail: 'Aktivität' }),
     ...detailTrail(pathname, '/aufgaben', { create: 'Neue Aufgabe', edit: 'Bearbeiten', detail: 'Aufgabe' }),

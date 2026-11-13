@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 import { ApiError, archiveContact, linkContactCompany, makePrimaryContact, restoreContact, unlinkContactCompany } from '../../api/crm.ts'
 import { fetchPartners } from '../../api/partners.ts'
 import { LinkedActivities, LinkedTasks } from '../../components/crm/LinkedRecords.tsx'
+import { ContactSales } from '../../components/sales/RelatedRecords.tsx'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
 import { buttonStyles } from '../../components/ui/button-styles.ts'
@@ -158,13 +159,8 @@ export function ContactDetailPage() {
             },
             {
               id: 'opportunities',
-              label: 'Verkaufschancen',
-              content: (
-                <EmptyState
-                  title="Verkaufschancen noch nicht implementiert"
-                  description="Es werden keine Chancen oder Beträge angezeigt."
-                />
-              ),
+              label: 'Verkauf und Bestellungen',
+              content: <ContactSales contactId={contact.id} />,
             },
             {
               id: 'service',

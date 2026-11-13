@@ -18,6 +18,15 @@ import { PartnerEditPage } from './pages/partners/PartnerEditPage.tsx'
 import { PartnerListPage } from './pages/partners/PartnerListPage.tsx'
 import { TaskCreatePage, TaskEditPage } from './pages/tasks/TaskFormPage.tsx'
 import { TaskListPage } from './pages/tasks/TaskListPage.tsx'
+import { DealCreatePage, DealEditPage } from './pages/deals/DealFormPage.tsx'
+import { DealDetailPage } from './pages/deals/DealDetailPage.tsx'
+import { DealListPage } from './pages/deals/DealListPage.tsx'
+import { PipelinePage } from './pages/deals/PipelinePage.tsx'
+import { OrderCreatePage, OrderEditPage } from './pages/orders/OrderFormPage.tsx'
+import { OrderDetailPage } from './pages/orders/OrderDetailPage.tsx'
+import { OrderListPage } from './pages/orders/OrderListPage.tsx'
+import { ProductCreatePage, ProductEditPage } from './pages/products/ProductFormPage.tsx'
+import { ProductListPage } from './pages/products/ProductListPage.tsx'
 import { SettingsPage } from './pages/SettingsPage.tsx'
 
 export default function App() {
@@ -44,6 +53,18 @@ export default function App() {
               <Route path="aufgaben/neu" element={<TaskCreatePage />} />
               <Route path="aufgaben/:taskId/bearbeiten" element={<TaskEditPage />} />
               <Route path="aufgaben" element={<TaskListPage />} />
+              <Route path="verkaufschancen/neu" element={<DealCreatePage />} />
+              <Route path="verkaufschancen/pipeline" element={<PipelinePage />} />
+              <Route path="verkaufschancen/:dealId/bearbeiten" element={<DealEditPage />} />
+              <Route path="verkaufschancen/:dealId" element={<DealDetailPage />} />
+              <Route path="verkaufschancen" element={<DealListPage />} />
+              <Route path="produkte/neu" element={<ProductCreatePage />} />
+              <Route path="produkte/:productId/bearbeiten" element={<ProductEditPage />} />
+              <Route path="produkte" element={<ProductListPage />} />
+              <Route path="bestellungen/neu" element={<OrderCreatePage />} />
+              <Route path="bestellungen/:orderId/bearbeiten" element={<OrderEditPage />} />
+              <Route path="bestellungen/:orderId" element={<OrderDetailPage />} />
+              <Route path="bestellungen" element={<OrderListPage />} />
               {modules.map((item) => (
                 <Route key={item.id} path={item.path.slice(1)} element={<ModulePage item={item} />} />
               ))}

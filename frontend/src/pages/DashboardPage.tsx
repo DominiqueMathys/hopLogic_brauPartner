@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { fetchActivities, fetchTaskSummary, fetchTasks } from '../api/crm.ts'
 import { fetchPartnerSummary } from '../api/partners.ts'
+import { fetchDealSummary, fetchOrderSummary } from '../api/sales.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { DataTable, type DataColumn } from '../components/ui/DataTable.tsx'
@@ -9,6 +10,7 @@ import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { LoadingState } from '../components/ui/LoadingState.tsx'
 import { labelOf, taskPriorityOptions, type Activity, type Task, type TaskSummary } from '../domain/crm.ts'
 import { formatDateTime, type PartnerSummary } from '../domain/partners.ts'
+import { formatChf, type DealSummary, type OrderSummary } from '../domain/sales.ts'
 import { navigation, type NavItem } from '../navigation.ts'
 import { usePageTitle } from '../usePageTitle.ts'
 
@@ -49,7 +51,6 @@ const taskColumns: DataColumn<Task>[] = [
   { id: 'priority', header: 'Priorität', cell: (row) => labelOf(taskPriorityOptions, row.priority) },
 ]
 
-const kpis = ['Offene Verkaufschancen', 'Bestellungen', 'Offene Service-Tickets']
 
 function summaryText(summary: PartnerSummary): string {
   if (summary.active === 0) {
@@ -116,6 +117,68 @@ function ActivePartnersCard() {
       ) : (
         <LoadingState label="Kennzahl wird geladen" />
       )}
+    </Card>
+  )
+}
+
+function SalesKpis() {
+  const [deals, setDeals] = useState<DealSummary | null>(null)
+  const [orders, setOrders] = useState<OrderSummary | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void Promise.all([fetchDealSummary(), fetchOrderSummary()])
+      .then(([dealSummary, orderSummary]) => {
+        if (!active) return
+        setDeals(dealSummary)
+        setOrders(orderSummary)
+      })
+      .catch(() => {
+        if (active) setFailed(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (failed) {
+    return <EmptyState compact title="Kennzahlen nicht verfügbar" description="Verkaufschancen und Bestellungen konnten nicht gelesen werden." />
+  }
+  if (!deals || !orders) {
+    return <LoadingState label="Verkaufskennzahlen werden geladen" />
+  }
+
+  const dealNote =
+    deals.open_count > 0 && deals.open_count === deals.open_demo
+      ? 'Die offenen Verkaufschancen sind ausschliesslich gekennzeichnete Testdaten.'
+      : 'Gezählt werden gespeicherte, nicht archivierte Deals.'
+  const orderNote =
+    orders.volume !== '0.00' && orders.volume === orders.volume_demo
+      ? 'Das Bestellvolumen besteht ausschliesslich aus gekennzeichneten Testdaten.'
+      : 'Entwürfe und stornierte Bestellungen zählen nicht zum Volumen.'
+
+  return (
+    <>
+      <Metric title="Offene Verkaufschancen" value={String(deals.open_count)} note={dealNote} to="/verkaufschancen" />
+      <Metric title="Erwarteter Pipeline-Wert" value={formatChf(deals.pipeline_value)} note="Summe aus Wert mal Phasenwahrscheinlichkeit." to="/verkaufschancen/pipeline" />
+      <Metric title="Gewonnene Deals" value={`${deals.won_count} · ${formatChf(deals.won_value)}`} note="Abgeschlossene gewonnene Verkaufschancen." to="/verkaufschancen?abgeschlossen=1&phase=gewonnen" />
+      <Metric title="Überfällige Verkaufschancen" value={String(deals.overdue_count)} note="Offene Deals mit Abschlussdatum vor heute." to="/verkaufschancen?ueberfaellig=1" />
+      <Metric title="Bestellvolumen" value={formatChf(orders.volume)} note={orderNote} to="/bestellungen" />
+      <Metric title="Neue Bestellungen" value={String(orders.new_count)} note="Eingereicht oder weitergeführt in den letzten 30 Tagen." to="/bestellungen" />
+    </>
+  )
+}
+
+function Metric({ title, value, note, to }: { title: string; value: string; note: string; to: string }) {
+  return (
+    <Card className="p-4">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <p className="mt-3 text-2xl font-semibold tracking-tight">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-muted">{note}</p>
+      <Link to={to} className="mt-3 inline-flex text-sm font-semibold text-petrol">
+        Anzeigen
+      </Link>
     </Card>
   )
 }
@@ -272,16 +335,11 @@ export function DashboardPage() {
           Kennzahlen
         </h2>
         <ActivePartnersCard />
-        {kpis.map((title) => (
-          <Card key={title} className="p-4">
-            <h3 className="text-sm font-semibold">{title}</h3>
-            <EmptyState
-              compact
-              title="Keine Werte"
-              description="Für diese Kennzahl liegen noch keine Datenbankwerte vor."
-            />
-          </Card>
-        ))}
+        <SalesKpis />
+        <Card className="p-4">
+          <h3 className="text-sm font-semibold">Offene Service-Tickets</h3>
+          <EmptyState compact title="Keine Werte" description="Für diese Kennzahl liegen noch keine Datenbankwerte vor." />
+        </Card>
       </section>
 
       <Card className="p-4">
@@ -331,7 +389,7 @@ export function DashboardPage() {
         <div className="mt-3 border border-dashed border-line bg-cream px-4 py-10">
           <EmptyState
             title="Diagramme folgen"
-            description="Auswertungen werden ergänzt, sobald Verkaufs- und Servicedaten vorliegen."
+            description="Grafische Auswertungen folgen später. Die Kennzahlen oben stammen aus den gespeicherten CRM-Daten."
           />
         </div>
       </Card>

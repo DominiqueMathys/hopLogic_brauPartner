@@ -63,6 +63,15 @@ export function OpportunitiesIcon(props: IconProps) {
   )
 }
 
+export function ProductsIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M8 3.5h8v4H8z" />
+      <path d="M7 7.5h10l-1 13H8l-1-13z" />
+    </IconFrame>
+  )
+}
+
 export function OrdersIcon(props: IconProps) {
   return (
     <IconFrame {...props}>
@@ -172,6 +181,7 @@ const navIcons = {
   contacts: ContactsIcon,
   opportunities: OpportunitiesIcon,
   orders: OrdersIcon,
+  products: ProductsIcon,
   activities: ActivitiesIcon,
   tasks: TasksIcon,
   service: ServiceIcon,

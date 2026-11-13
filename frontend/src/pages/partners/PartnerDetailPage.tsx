@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { LinkedActivities, LinkedTasks, PartnerContacts } from '../../components/crm/LinkedRecords.tsx'
+import { PartnerDeals, PartnerOrders } from '../../components/sales/RelatedRecords.tsx'
 import { ApiError, archivePartner, restorePartner } from '../../api/partners.ts'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
@@ -149,22 +150,12 @@ export function PartnerDetailPage() {
             {
               id: 'opportunities',
               label: 'Verkaufschancen',
-              content: (
-                <NotReady
-                  title="Verkaufschancen noch nicht implementiert"
-                  description="Die Verknüpfung mit späteren Deals ist vorbereitet. Es werden keine Verkaufschancen angezeigt."
-                />
-              ),
+              content: <PartnerDeals partnerId={partner.id} />,
             },
             {
               id: 'orders',
               label: 'Bestellungen',
-              content: (
-                <NotReady
-                  title="Bestellungen noch nicht implementiert"
-                  description="ERP-Bestellungen werden hier angezeigt, sobald die Anbindung vorhanden ist. Es sind keine Bestellungen hinterlegt."
-                />
-              ),
+              content: <PartnerOrders partnerId={partner.id} />,
             },
             {
               id: 'service',
