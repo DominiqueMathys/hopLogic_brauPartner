@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { errorMessage, fetchNoticeSummary, fetchNotices, markNoticeRead } from '../../api/engagement.ts'
+import { actorName, rememberActor } from '../../lib/actor.ts'
 import { BellIcon, MenuIcon, UserIcon } from '../icons.tsx'
+import { Button } from '../ui/Button.tsx'
 import { SearchField } from '../ui/SearchField.tsx'
 import { Modal } from '../ui/Modal.tsx'
 import { Breadcrumbs } from './Breadcrumbs.tsx'
 import { navigation } from '../../navigation.ts'
+import type { Notice } from '../../domain/engagement.ts'
 
 type HeaderProps = {
   menuExpanded: boolean
@@ -17,6 +21,11 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
   const [query, setQuery] = useState('')
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [actor, setActor] = useState(() => actorName())
+  const [unread, setUnread] = useState<number | null>(null)
+  const [limited, setLimited] = useState(true)
+  const [notices, setNotices] = useState<Notice[]>([])
+  const [noticeError, setNoticeError] = useState('')
   const normalized = query.trim().toLocaleLowerCase('de-LI')
   const results = navigation.filter((item) => item.label.toLocaleLowerCase('de-LI').includes(normalized))
 
@@ -24,6 +33,47 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
     setQuery('')
     void navigate(path)
   }
+
+  useEffect(() => {
+    let active = true
+    function load() {
+      const name = actorName()
+      void fetchNoticeSummary(name)
+        .then((summary) => {
+          if (!active) return
+          setUnread(summary.unread)
+          setLimited(!name)
+        })
+        .catch(() => {
+          if (active) setUnread(null)
+        })
+    }
+    load()
+    const timer = window.setInterval(load, 30000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
+  }, [actor])
+
+  useEffect(() => {
+    if (!notificationsOpen) return
+    let active = true
+    void fetchNotices({ recipient: actor, unread: false })
+      .then((result) => {
+        if (!active) return
+        setNotices(result.items.slice(0, 8))
+        setUnread(result.unread)
+        setLimited(!actor.trim())
+        setNoticeError(result.notice)
+      })
+      .catch((caught: unknown) => {
+        if (active) setNoticeError(errorMessage(caught))
+      })
+    return () => {
+      active = false
+    }
+  }, [notificationsOpen, actor])
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-cream">
@@ -50,12 +100,19 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
         <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center border border-line bg-card"
+            className="relative inline-flex h-11 w-11 items-center justify-center border border-line bg-card"
             aria-haspopup="dialog"
             onClick={() => setNotificationsOpen(true)}
           >
             <BellIcon />
-            <span className="sr-only">Benachrichtigungen</span>
+            <span className="sr-only">
+              Benachrichtigungen{limited || unread === null ? '' : `, ${unread} ungelesen`}
+            </span>
+            {!limited && unread ? (
+              <span className="absolute top-1 right-1 min-w-5 bg-petrol px-1 text-center text-[10px] leading-4 font-semibold text-cream">
+                {unread > 99 ? '99+' : unread}
+              </span>
+            ) : null}
           </button>
           <button
             type="button"
@@ -69,10 +126,61 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
         </div>
       </div>
       <Modal open={notificationsOpen} title="Benachrichtigungen" onClose={() => setNotificationsOpen(false)}>
-        <p>
-          Es ist kein Benachrichtigungsdienst verbunden. Hier erscheinen später echte Meldungen aus Vertrieb,
-          Service und Aufgaben. Es werden keine Beispielmeldungen angezeigt.
+        <p className="text-sm leading-6">
+          Bis Phase 08 gibt es kein Benutzerkonto. Angezeigt werden nur gespeicherte Hinweise für den Anzeigenamen.
         </p>
+        <label className="mt-3 grid gap-1 text-sm font-semibold" htmlFor="actor-name">
+          Anzeigename
+          <input
+            id="actor-name"
+            className="border border-line bg-card px-3 py-2 font-normal"
+            value={actor}
+            onChange={(event) => {
+              setActor(event.target.value)
+              rememberActor(event.target.value)
+            }}
+          />
+        </label>
+        {noticeError ? <p className="mt-3 text-sm leading-6">{noticeError}</p> : null}
+        {limited ? (
+          <p className="mt-3 text-sm">Ohne Anzeigename bleibt die Liste leer. Es werden keine fremden Hinweise gezeigt.</p>
+        ) : notices.length === 0 ? (
+          <p className="mt-3 text-sm">Keine gespeicherten Hinweise für diesen Namen.</p>
+        ) : (
+          <ul className="mt-3 grid gap-2">
+            {notices.map((item) => (
+              <li key={item.id} className={item.read_at ? 'border border-line px-3 py-2' : 'border border-petrol bg-petrol-soft px-3 py-2'}>
+                <p className="text-sm font-semibold">{item.title}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {item.href ? (
+                    <Link to={item.href} className="text-sm font-semibold text-petrol" onClick={() => setNotificationsOpen(false)}>
+                      Datensatz öffnen
+                    </Link>
+                  ) : null}
+                  {!item.read_at ? (
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        void markNoticeRead(item.id, actor)
+                          .then(() => fetchNotices({ recipient: actor }))
+                          .then((result) => {
+                            setNotices(result.items.slice(0, 8))
+                            setUnread(result.unread)
+                          })
+                          .catch((caught: unknown) => setNoticeError(errorMessage(caught)))
+                      }}
+                    >
+                      Gelesen
+                    </Button>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <Link to="/benachrichtigungen" className="mt-4 inline-flex text-sm font-semibold text-petrol" onClick={() => setNotificationsOpen(false)}>
+          Benachrichtigungscenter
+        </Link>
       </Modal>
       <Modal open={profileOpen} title="Benutzerprofil" onClose={() => setProfileOpen(false)}>
         <p>

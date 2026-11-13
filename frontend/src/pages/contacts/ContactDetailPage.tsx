@@ -4,6 +4,7 @@ import { ApiError, archiveContact, linkContactCompany, makePrimaryContact, resto
 import { fetchPartners } from '../../api/partners.ts'
 import { LinkedActivities, LinkedTasks } from '../../components/crm/LinkedRecords.tsx'
 import { ContactSales } from '../../components/sales/RelatedRecords.tsx'
+import { PreferencePanel } from '../../components/engagement/PreferencePanel.tsx'
 import { ContactService } from '../../components/service/RelatedService.tsx'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
@@ -167,6 +168,11 @@ export function ContactDetailPage() {
               id: 'service',
               label: 'Servicefälle',
               content: <ContactService contactId={contact.id} />,
+            },
+            {
+              id: 'preferences',
+              label: 'Kommunikation',
+              content: <PreferencePanel contactId={contact.id} />,
             },
           ]}
         />

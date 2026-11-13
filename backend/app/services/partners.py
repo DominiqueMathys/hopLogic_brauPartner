@@ -88,6 +88,19 @@ def insert_partner(db: Session, data: PartnerWrite) -> Partner:
     apply_write(partner, data)
     db.add(partner)
     db.flush()
+    from app.services.automation import publish_event
+
+    publish_event(
+        db,
+        "partner_created",
+        dedupe_key=f"partner:{partner.id}",
+        context={
+            "owner": partner.account_owner,
+            "partner_id": partner.id,
+            "company_name": partner.company_name,
+            "href": f"/vertriebspartner/{partner.id}",
+        },
+    )
     return partner
 
 

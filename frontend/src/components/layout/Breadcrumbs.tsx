@@ -18,6 +18,24 @@ function pageTrail(pathname: string): string[] {
   if (pathname === '/verkaufschancen/pipeline') {
     return ['Pipeline']
   }
+  if (pathname === '/kampagnen/vorlagen') {
+    return ['Nachrichtenvorlagen']
+  }
+  if (pathname === '/kampagnen/vorlagen/neu') {
+    return ['Nachrichtenvorlagen', 'Neue Vorlage']
+  }
+  if (/^\/kampagnen\/vorlagen\/[^/]+\/bearbeiten$/.test(pathname)) {
+    return ['Nachrichtenvorlagen', 'Bearbeiten']
+  }
+  if (/^\/kampagnen\/vorlagen\/[^/]+$/.test(pathname)) {
+    return ['Nachrichtenvorlagen', 'Vorlage']
+  }
+  if (pathname === '/benachrichtigungen/einstellungen') {
+    return ['Einstellungen']
+  }
+  if (/^\/automatisierungen\/[^/]+\/protokoll$/.test(pathname)) {
+    return ['Protokoll']
+  }
   return [
     ...detailTrail(pathname, '/vertriebspartner', { create: 'Neuer Partner', edit: 'Bearbeiten', detail: 'Partner' }),
     ...detailTrail(pathname, '/verkaufschancen', { create: 'Neue Verkaufschance', edit: 'Bearbeiten', detail: 'Verkaufschance' }),
@@ -28,6 +46,8 @@ function pageTrail(pathname: string): string[] {
     ...detailTrail(pathname, '/kontakte', { create: 'Neuer Kontakt', edit: 'Bearbeiten', detail: 'Kontakt' }),
     ...detailTrail(pathname, '/aktivitaeten', { create: 'Neue Aktivität', edit: 'Bearbeiten', detail: 'Aktivität' }),
     ...detailTrail(pathname, '/aufgaben', { create: 'Neue Aufgabe', edit: 'Bearbeiten', detail: 'Aufgabe' }),
+    ...detailTrail(pathname, '/kampagnen', { create: 'Neue Kampagne', edit: 'Bearbeiten', detail: 'Kampagne' }),
+    ...detailTrail(pathname, '/automatisierungen', { create: 'Neue Automatisierung', edit: 'Bearbeiten', detail: 'Automatisierung' }),
   ]
 }
 

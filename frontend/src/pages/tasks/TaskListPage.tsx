@@ -88,7 +88,7 @@ export function TaskListPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Aufgaben</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
-            Überfällige Aufgaben sind rot markiert. Bald fällig bedeutet innerhalb von sieben Tagen. Automatische Benachrichtigungen folgen später.
+            Überfällige Aufgaben sind rot markiert. Bald fällig bedeutet innerhalb von sieben Tagen. Hinweise stehen im Benachrichtigungscenter für den gewählten Anzeigenamen.
           </p>
         </div>
         <Link to="/aufgaben/neu" className={cx(buttonStyles.base, buttonStyles.primary)}>

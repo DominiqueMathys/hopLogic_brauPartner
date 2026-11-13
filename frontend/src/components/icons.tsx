@@ -185,6 +185,46 @@ export function MenuIcon(props: IconProps) {
   )
 }
 
+export function CampaignsIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M5 5.5h14v13H5z" />
+      <path d="M8 9h8M8 12.5h5" />
+    </IconFrame>
+  )
+}
+
+export function CareIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <circle cx="8" cy="9" r="2.4" />
+      <circle cx="16" cy="9" r="2.4" />
+      <path d="M4.5 18c.5-2.2 2-3.4 3.5-3.4S11 15.8 11.5 18" />
+      <path d="M12.5 18c.5-2.2 2-3.4 3.5-3.4s3 .1 3.5 3.4" />
+    </IconFrame>
+  )
+}
+
+export function AutomationsIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <circle cx="7" cy="12" r="2.2" />
+      <circle cx="17" cy="7" r="2.2" />
+      <circle cx="17" cy="17" r="2.2" />
+      <path d="M9 11.2 14.8 8.2M9 12.8l5.8 3" />
+    </IconFrame>
+  )
+}
+
+export function NoticesIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M6 16.5h12l-1.2-2V10a4.8 4.8 0 0 0-9.6 0v4.5L6 16.5z" />
+      <path d="M10 16.5a2 2 0 0 0 4 0" />
+    </IconFrame>
+  )
+}
+
 const navIcons = {
   dashboard: DashboardIcon,
   partners: PartnersIcon,
@@ -196,6 +236,10 @@ const navIcons = {
   tasks: TasksIcon,
   service: ServiceIcon,
   segments: SegmentsIcon,
+  campaigns: CampaignsIcon,
+  care: CareIcon,
+  automations: AutomationsIcon,
+  notices: NoticesIcon,
   materials: MaterialsIcon,
   reporting: ReportingIcon,
   settings: SettingsIcon,

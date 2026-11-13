@@ -11,6 +11,7 @@ export default defineConfig({
     host,
     port: 5173,
     strictPort: true,
+    allowedHosts: ['arkansas-documented-organized-rich.trycloudflare.com'],
     proxy: {
       '/api': {
         target: proxyTarget,

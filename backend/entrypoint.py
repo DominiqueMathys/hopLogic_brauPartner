@@ -36,6 +36,8 @@ def wait_for_database(url: str) -> None:
 def main() -> None:
     wait_for_database(database_url())
     subprocess.check_call([sys.executable, "-m", "alembic", "upgrade", "head"])
+    if os.environ.get("PROCESS_ROLE") == "worker":
+        raise SystemExit(subprocess.call([sys.executable, "-m", "app.worker"]))
     command = [
         sys.executable,
         "-m",

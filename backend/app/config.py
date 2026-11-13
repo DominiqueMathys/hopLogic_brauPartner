@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     ticket_upload_dir: str = "data/ticket-attachments"
     ticket_max_bytes: int = 5_242_880
+    automation_embedded_worker: bool = True
+    automation_interval_seconds: int = 30
 
     @property
     def cors_origin_list(self) -> list[str]:

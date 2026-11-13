@@ -6,6 +6,19 @@ Import new model modules here so Alembic can discover them on Base.metadata.
 from app.database import Base
 from app.models.activity import Activity
 from app.models.contact import CompanyContact, Contact
+from app.models.engagement import (
+    AutomationExecution,
+    AutomationRule,
+    CampaignAudienceMember,
+    CampaignRecipient,
+    CareExecution,
+    CommunicationPreference,
+    CustomerCareRule,
+    MarketingCampaign,
+    MessageTemplate,
+    Notification,
+    NotificationPreference,
+)
 from app.models.partner import Partner
 from app.models.sales import Deal, DealStageHistory, Order, OrderItem, Product
 from app.models.service import (
@@ -21,12 +34,23 @@ from app.models.task import Task
 
 __all__ = [
     "Activity",
+    "AutomationExecution",
+    "AutomationRule",
     "Base",
+    "CampaignAudienceMember",
+    "CampaignRecipient",
+    "CareExecution",
+    "CommunicationPreference",
+    "CustomerCareRule",
     "CompanyContact",
     "Contact",
     "CustomerSegment",
     "Deal",
     "DealStageHistory",
+    "MarketingCampaign",
+    "MessageTemplate",
+    "Notification",
+    "NotificationPreference",
     "Order",
     "OrderItem",
     "Partner",

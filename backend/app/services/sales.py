@@ -114,14 +114,30 @@ def _ensure_deal_for_partner(db: Session, deal_id: UUID | None, partner_id: UUID
 
 
 def _record_stage(db: Session, deal: Deal, from_stage: str | None, to_stage: str, changed_by: str | None) -> None:
-    db.add(
-        DealStageHistory(
-            deal_id=deal.id,
-            from_stage=from_stage,
-            to_stage=to_stage,
-            changed_by=changed_by,
-        )
+    row = DealStageHistory(
+        deal_id=deal.id,
+        from_stage=from_stage,
+        to_stage=to_stage,
+        changed_by=changed_by,
     )
+    db.add(row)
+    db.flush()
+    if from_stage is not None:
+        from app.services.automation import company_name, publish_event
+
+        publish_event(
+            db,
+            "deal_stage_changed",
+            dedupe_key=f"deal-stage:{row.id}",
+            context={
+                "owner": deal.account_owner,
+                "partner_id": deal.partner_id,
+                "contact_id": deal.contact_id,
+                "company_name": company_name(db, deal.partner_id),
+                "href": f"/verkaufschancen/{deal.id}",
+                "deal_id": deal.id,
+            },
+        )
 
 
 def _names(db: Session, partner_ids: list[UUID], contact_ids: list[UUID]) -> tuple[dict[UUID, str], dict[UUID, str]]:
@@ -220,6 +236,21 @@ def insert_deal(db: Session, data: DealWrite, *, is_demo: bool = False, demo_key
     db.flush()
     _record_stage(db, deal, None, deal.stage, data.account_owner)
     db.flush()
+    from app.services.automation import company_name, publish_event
+
+    publish_event(
+        db,
+        "deal_created",
+        dedupe_key=f"deal:{deal.id}",
+        context={
+            "owner": deal.account_owner,
+            "partner_id": deal.partner_id,
+            "contact_id": deal.contact_id,
+            "company_name": company_name(db, deal.partner_id),
+            "href": f"/verkaufschancen/{deal.id}",
+            "deal_id": deal.id,
+        },
+    )
     return deal
 
 
@@ -661,6 +692,20 @@ def insert_order(
     _build_items(db, order, data)
     order.updated_at = _now()
     db.flush()
+    from app.services.automation import company_name, publish_event
+
+    publish_event(
+        db,
+        "order_created",
+        dedupe_key=f"order:{order.id}",
+        context={
+            "owner": None,
+            "partner_id": order.partner_id,
+            "contact_id": order.contact_id,
+            "company_name": company_name(db, order.partner_id),
+            "href": f"/bestellungen/{order.id}",
+        },
+    )
     return order
 
 

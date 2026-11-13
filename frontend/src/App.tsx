@@ -31,6 +31,11 @@ import { SegmentCreatePage, SegmentDetailPage, SegmentEditPage, SegmentListPage 
 import { TicketCreatePage, TicketEditPage } from './pages/service/TicketFormPage.tsx'
 import { TicketDetailPage } from './pages/service/TicketDetailPage.tsx'
 import { TicketListPage } from './pages/service/TicketListPage.tsx'
+import { AutomationDetailPage, AutomationFormPage, AutomationListPage } from './pages/automations/AutomationPages.tsx'
+import { CampaignDetailPage, CampaignFormPage, CampaignListPage } from './pages/campaigns/CampaignPages.tsx'
+import { TemplateDetailPage, TemplateFormPage, TemplateListPage } from './pages/campaigns/TemplatePages.tsx'
+import { CarePage } from './pages/care/CarePage.tsx'
+import { NotificationCenterPage, NotificationSettingsPage } from './pages/notifications/NotificationPages.tsx'
 import { SettingsPage } from './pages/SettingsPage.tsx'
 
 export default function App() {
@@ -77,6 +82,22 @@ export default function App() {
               <Route path="segmente/:segmentId/bearbeiten" element={<SegmentEditPage />} />
               <Route path="segmente/:segmentId" element={<SegmentDetailPage />} />
               <Route path="segmente" element={<SegmentListPage />} />
+              <Route path="kampagnen/vorlagen/neu" element={<TemplateFormPage />} />
+              <Route path="kampagnen/vorlagen/:templateId/bearbeiten" element={<TemplateFormPage />} />
+              <Route path="kampagnen/vorlagen/:templateId" element={<TemplateDetailPage />} />
+              <Route path="kampagnen/vorlagen" element={<TemplateListPage />} />
+              <Route path="kampagnen/neu" element={<CampaignFormPage />} />
+              <Route path="kampagnen/:campaignId/bearbeiten" element={<CampaignFormPage />} />
+              <Route path="kampagnen/:campaignId" element={<CampaignDetailPage />} />
+              <Route path="kampagnen" element={<CampaignListPage />} />
+              <Route path="partnerbetreuung" element={<CarePage />} />
+              <Route path="automatisierungen/neu" element={<AutomationFormPage />} />
+              <Route path="automatisierungen/:ruleId/bearbeiten" element={<AutomationFormPage />} />
+              <Route path="automatisierungen/:ruleId/protokoll" element={<AutomationDetailPage />} />
+              <Route path="automatisierungen/:ruleId" element={<AutomationDetailPage />} />
+              <Route path="automatisierungen" element={<AutomationListPage />} />
+              <Route path="benachrichtigungen/einstellungen" element={<NotificationSettingsPage />} />
+              <Route path="benachrichtigungen" element={<NotificationCenterPage />} />
               {modules.map((item) => (
                 <Route key={item.id} path={item.path.slice(1)} element={<ModulePage item={item} />} />
               ))}

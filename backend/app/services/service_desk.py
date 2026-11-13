@@ -207,6 +207,22 @@ def insert_ticket(db: Session, data: TicketWrite, *, is_demo: bool = False, demo
     _replace_products(db, ticket.id, data.product_ids)
     _event(db, ticket, "created", to_value=status, changed_by=data.account_owner)
     db.flush()
+    from app.services.automation import publish_event
+
+    publish_event(
+        db,
+        "ticket_created",
+        dedupe_key=f"ticket:{ticket.id}",
+        context={
+            "owner": ticket.account_owner,
+            "partner_id": ticket.partner_id,
+            "contact_id": ticket.contact_id,
+            "priority": ticket.priority,
+            "ticket_id": ticket.id,
+            "href": f"/kundenservice/{ticket.id}",
+            "subject_title": ticket.subject,
+        },
+    )
     return ticket
 
 
@@ -232,6 +248,21 @@ def update_ticket(db: Session, ticket_id: uuid.UUID, data: TicketUpdate, *, chan
     actor = changed_by or data.account_owner
     if previous_priority != data.priority:
         _event(db, ticket, "priority_changed", from_value=previous_priority, to_value=data.priority, changed_by=actor)
+        from app.services.automation import publish_event
+
+        publish_event(
+            db,
+            "ticket_priority_changed",
+            dedupe_key=f"ticket-priority:{ticket.id}:{previous_priority}:{data.priority}",
+            context={
+                "owner": ticket.account_owner,
+                "partner_id": ticket.partner_id,
+                "contact_id": ticket.contact_id,
+                "priority": data.priority,
+                "ticket_id": ticket.id,
+                "href": f"/kundenservice/{ticket.id}",
+            },
+        )
     if (previous_owner or "") != (data.account_owner or ""):
         _event(db, ticket, "owner_changed", from_value=previous_owner, to_value=data.account_owner, changed_by=actor)
     db.flush()
@@ -260,6 +291,21 @@ def change_priority(db: Session, ticket_id: uuid.UUID, data: PriorityChange) -> 
     ticket.priority = data.priority
     _event(db, ticket, "priority_changed", from_value=previous, to_value=data.priority, changed_by=data.changed_by)
     db.flush()
+    from app.services.automation import publish_event
+
+    publish_event(
+        db,
+        "ticket_priority_changed",
+        dedupe_key=f"ticket-priority:{ticket.id}:{previous}:{data.priority}",
+        context={
+            "owner": ticket.account_owner,
+            "partner_id": ticket.partner_id,
+            "contact_id": ticket.contact_id,
+            "priority": data.priority,
+            "ticket_id": ticket.id,
+            "href": f"/kundenservice/{ticket.id}",
+        },
+    )
     return ticket
 
 

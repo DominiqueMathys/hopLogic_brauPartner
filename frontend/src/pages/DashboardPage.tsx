@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { fetchActivities, fetchTaskSummary, fetchTasks } from '../api/crm.ts'
+import { fetchEngagementSummary, fetchNoticeSummary } from '../api/engagement.ts'
 import { fetchPartnerSummary } from '../api/partners.ts'
 import { fetchDealSummary, fetchOrderSummary } from '../api/sales.ts'
 import { fetchSegments, fetchTicketSummary } from '../api/service.ts'
@@ -12,7 +13,9 @@ import { LoadingState } from '../components/ui/LoadingState.tsx'
 import { labelOf, taskPriorityOptions, type Activity, type Task, type TaskSummary } from '../domain/crm.ts'
 import { formatDateTime, type PartnerSummary } from '../domain/partners.ts'
 import { formatChf, type DealSummary, type OrderSummary } from '../domain/sales.ts'
+import type { EngagementSummary } from '../domain/engagement.ts'
 import type { Segment, TicketSummary } from '../domain/service.ts'
+import { actorName } from '../lib/actor.ts'
 import { navigation, type NavItem } from '../navigation.ts'
 import { usePageTitle } from '../usePageTitle.ts'
 
@@ -217,7 +220,7 @@ function TaskSignals() {
   const note =
     summary.open > 0 && summary.open === summary.open_demo
       ? 'Die offenen Aufgaben sind ausschliesslich gekennzeichnete Testdaten.'
-      : 'Gezählt werden gespeicherte Aufgaben. Eine automatische Benachrichtigung folgt später.'
+      : 'Gezählt werden gespeicherte Aufgaben. Hinweise stehen im Benachrichtigungscenter für den gewählten Anzeigenamen.'
 
   return (
     <div className="grid gap-3">
@@ -297,6 +300,52 @@ function SegmentOverview() {
         </li>
       ))}
     </ul>
+  )
+}
+
+function EngagementSignals() {
+  const [summary, setSummary] = useState<EngagementSummary | null>(null)
+  const [unread, setUnread] = useState<number | null>(null)
+  const [limited, setLimited] = useState(true)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    const name = actorName()
+    void Promise.all([fetchEngagementSummary(), fetchNoticeSummary(name)])
+      .then(([engagement, notices]) => {
+        if (!active) return
+        setSummary(engagement)
+        setUnread(notices.unread)
+        setLimited(!name)
+      })
+      .catch(() => {
+        if (active) setFailed(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (failed) {
+    return <EmptyState compact title="Betreuung nicht verfügbar" description="Kampagnen und Automatisierungen konnten nicht gelesen werden." />
+  }
+  if (!summary || unread === null) return <LoadingState label="Betreuungskennzahlen werden geladen" />
+
+  return (
+    <>
+      <Metric title="Aktive Kampagnen" value={String(summary.active_campaigns)} note="Kampagnen mit Status aktiv." to="/kampagnen?status=aktiv" />
+      <Metric title="Anstehende Betreuungsaufgaben" value={String(summary.care_tasks)} note="Offene Aufgaben aus Betreuung oder Automatisierung, deren Fälligkeit noch nicht vorbei ist." to="/aufgaben" />
+      <Metric title="Partner ohne aktuellen Kontakt" value={String(summary.partners_without_contact)} note={`Kein dokumentierter Kontakt seit ${summary.contact_days} Tagen, nach der aktiven Betreuungsregel.`} to="/partnerbetreuung" />
+      <Metric title="Überfällige Aufgaben" value={String(summary.overdue_tasks)} note="Offene Aufgaben mit Fälligkeit vor jetzt." to="/aufgaben?faellig=overdue" />
+      <Metric
+        title="Ungelesene Benachrichtigungen"
+        value={limited ? '—' : String(unread)}
+        note={limited ? 'Bis Phase 08 braucht es einen Anzeigenamen. Fremde Hinweise werden nicht gezählt.' : 'Gespeicherte ungelesene Hinweise für den Anzeigenamen dieser Sitzung.'}
+        to="/benachrichtigungen"
+      />
+      <Metric title="Aktive Automatisierungen" value={String(summary.active_automations)} note="Regeln mit Status aktiv. Zeitregeln laufen auf dem Server." to="/automatisierungen" />
+    </>
   )
 }
 
@@ -408,6 +457,7 @@ export function DashboardPage() {
         <ActivePartnersCard />
         <SalesKpis />
         <ServiceSignals />
+        <EngagementSignals />
       </section>
 
       <Card className="p-4">
