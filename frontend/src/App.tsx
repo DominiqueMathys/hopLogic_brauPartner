@@ -6,6 +6,10 @@ import { navigation } from './navigation.ts'
 import { DashboardPage } from './pages/DashboardPage.tsx'
 import { ModulePage } from './pages/ModulePage.tsx'
 import { NotFoundPage } from './pages/NotFoundPage.tsx'
+import { PartnerCreatePage } from './pages/partners/PartnerCreatePage.tsx'
+import { PartnerDetailPage } from './pages/partners/PartnerDetailPage.tsx'
+import { PartnerEditPage } from './pages/partners/PartnerEditPage.tsx'
+import { PartnerListPage } from './pages/partners/PartnerListPage.tsx'
 import { SettingsPage } from './pages/SettingsPage.tsx'
 
 export default function App() {
@@ -18,6 +22,10 @@ export default function App() {
           <Routes>
             <Route element={<AppShell />}>
               <Route index element={<DashboardPage />} />
+              <Route path="vertriebspartner/neu" element={<PartnerCreatePage />} />
+              <Route path="vertriebspartner/:partnerId/bearbeiten" element={<PartnerEditPage />} />
+              <Route path="vertriebspartner/:partnerId" element={<PartnerDetailPage />} />
+              <Route path="vertriebspartner" element={<PartnerListPage />} />
               {modules.map((item) => (
                 <Route key={item.id} path={item.path.slice(1)} element={<ModulePage item={item} />} />
               ))}

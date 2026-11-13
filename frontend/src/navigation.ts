@@ -22,8 +22,8 @@ export const navigation: NavItem[] = [
     id: 'partners',
     label: 'Vertriebspartner',
     path: '/vertriebspartner',
-    summary: 'Stammdaten und Betreuung der Vertriebspartner.',
-    phase: 'planned',
+    summary: 'Stammdaten, Status und Betreuung der Vertriebspartner.',
+    phase: 'available',
   },
   {
     id: 'contacts',

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { cx } from '../../lib/cx.ts'
 
 export type DataColumn<T> = {
   id: string
@@ -12,12 +13,13 @@ type DataTableProps<T> = {
   rows: readonly T[]
   rowKey: (row: T) => string
   empty: ReactNode
+  tableClassName?: string
 }
 
-export function DataTable<T>({ caption, columns, rows, rowKey, empty }: DataTableProps<T>) {
+export function DataTable<T>({ caption, columns, rows, rowKey, empty, tableClassName }: DataTableProps<T>) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-left text-sm">
+      <table className={cx('w-full border-collapse text-left text-sm', tableClassName)}>
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr>
@@ -39,7 +41,7 @@ export function DataTable<T>({ caption, columns, rows, rowKey, empty }: DataTabl
             </tr>
           ) : (
             rows.map((row) => (
-              <tr key={rowKey(row)}>
+              <tr key={rowKey(row)} className="hover:bg-cream">
                 {columns.map((column) => (
                   <td key={column.id} className="border-b border-line px-3 py-3 align-top">
                     {column.cell(row)}

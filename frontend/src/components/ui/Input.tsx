@@ -7,13 +7,16 @@ export const fieldClassName =
 type InputProps = {
   label: string
   hint?: ReactNode
+  error?: string
   id?: string
 } & InputHTMLAttributes<HTMLInputElement>
 
-export function Input({ label, hint, id, className, ...props }: InputProps) {
+export function Input({ label, hint, error, id, className, ...props }: InputProps) {
   const generatedId = useId()
   const inputId = id ?? generatedId
   const hintId = hint ? `${inputId}-hint` : undefined
+  const errorId = error ? `${inputId}-error` : undefined
+  const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
 
   return (
     <div className="grid gap-1.5">
@@ -21,14 +24,20 @@ export function Input({ label, hint, id, className, ...props }: InputProps) {
         {label}
       </label>
       <input
-        id={inputId}
-        className={cx(fieldClassName, className)}
-        aria-describedby={hintId}
         {...props}
+        id={inputId}
+        className={cx(fieldClassName, error ? 'border-critical' : undefined, className)}
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
       />
       {hint ? (
         <p id={hintId} className="text-xs leading-5 text-muted">
           {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={errorId} className="text-xs leading-5 text-critical">
+          {error}
         </p>
       ) : null}
     </div>

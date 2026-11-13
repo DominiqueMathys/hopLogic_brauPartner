@@ -13,14 +13,17 @@ type SelectProps = {
   onChange: (value: string) => void
   options: SelectOption[]
   hint?: string
+  error?: string
   id?: string
   disabled?: boolean
 }
 
-export function Select({ label, value, onChange, options, hint, id, disabled }: SelectProps) {
+export function Select({ label, value, onChange, options, hint, error, id, disabled }: SelectProps) {
   const generatedId = useId()
   const selectId = id ?? generatedId
   const hintId = hint ? `${selectId}-hint` : undefined
+  const errorId = error ? `${selectId}-error` : undefined
+  const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
 
   return (
     <div className="grid gap-1.5">
@@ -29,10 +32,11 @@ export function Select({ label, value, onChange, options, hint, id, disabled }: 
       </label>
       <select
         id={selectId}
-        className={cx(fieldClassName, 'min-h-11')}
+        className={cx(fieldClassName, 'min-h-11', error ? 'border-critical' : undefined)}
         value={value}
         disabled={disabled}
-        aria-describedby={hintId}
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
         onChange={(event) => onChange(event.target.value)}
       >
         {options.map((option) => (
@@ -44,6 +48,11 @@ export function Select({ label, value, onChange, options, hint, id, disabled }: 
       {hint ? (
         <p id={hintId} className="text-xs leading-5 text-muted">
           {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={errorId} className="text-xs leading-5 text-critical">
+          {error}
         </p>
       ) : null}
     </div>

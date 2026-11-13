@@ -1,9 +1,13 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
+import { fetchPartnerSummary } from '../api/partners.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { DataTable, type DataColumn } from '../components/ui/DataTable.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
-import { navigation } from '../navigation.ts'
+import { LoadingState } from '../components/ui/LoadingState.tsx'
+import type { PartnerSummary } from '../domain/partners.ts'
+import { navigation, type NavItem } from '../navigation.ts'
 import { usePageTitle } from '../usePageTitle.ts'
 
 type ActivityRow = { id: string }
@@ -21,12 +25,76 @@ const taskColumns: DataColumn<TaskRow>[] = [
   { id: 'priority', header: 'Priorität', cell: () => null },
 ]
 
-const kpis = [
-  'Aktive Vertriebspartner',
-  'Offene Verkaufschancen',
-  'Bestellungen',
-  'Offene Service-Tickets',
-]
+const kpis = ['Offene Verkaufschancen', 'Bestellungen', 'Offene Service-Tickets']
+
+function summaryText(summary: PartnerSummary): string {
+  if (summary.active === 0) {
+    return 'In der Datenbank sind keine aktiven Vertriebspartner erfasst.'
+  }
+  if (summary.active === summary.active_demo) {
+    return 'Ausschliesslich gekennzeichnete Testdaten, keine echten Kundenbeziehungen.'
+  }
+  if (summary.active_demo > 0) {
+    return `Darin enthaltene Testdaten: ${summary.active_demo}.`
+  }
+  return 'Aktive Partner aus der Datenbank, ohne archivierte Datensätze.'
+}
+
+function accessBadge(item: NavItem): { tone: 'petrol' | 'success' | 'warning'; label: string } {
+  if (item.id === 'settings') {
+    return { tone: 'petrol', label: 'Systemstatus' }
+  }
+  if (item.phase === 'available') {
+    return { tone: 'success', label: 'Verfügbar' }
+  }
+  return { tone: 'warning', label: 'In Entwicklung' }
+}
+
+function ActivePartnersCard() {
+  const [summary, setSummary] = useState<PartnerSummary | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void fetchPartnerSummary()
+      .then((result) => {
+        if (active) {
+          setSummary(result)
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true)
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  return (
+    <Card className="p-4">
+      <h3 className="text-sm font-semibold">Aktive Vertriebspartner</h3>
+      {summary ? (
+        <>
+          <p className="mt-3 text-3xl font-semibold tracking-tight">{summary.active}</p>
+          <p className="mt-2 text-sm leading-6 text-muted">{summaryText(summary)}</p>
+          <Link to="/vertriebspartner?status=aktiv" className="mt-3 inline-flex text-sm font-semibold text-petrol">
+            Zur Partnerliste
+          </Link>
+        </>
+      ) : failed ? (
+        <EmptyState
+          compact
+          title="Kennzahl nicht verfügbar"
+          description="Die Partnerdatenbank konnte nicht gelesen werden."
+        />
+      ) : (
+        <LoadingState label="Kennzahl wird geladen" />
+      )}
+    </Card>
+  )
+}
 
 export function DashboardPage() {
   usePageTitle('Dashboard')
@@ -46,6 +114,7 @@ export function DashboardPage() {
         <h2 id="kpi-title" className="sr-only">
           Kennzahlen
         </h2>
+        <ActivePartnersCard />
         {kpis.map((title) => (
           <Card key={title} className="p-4">
             <h3 className="text-sm font-semibold">{title}</h3>
@@ -98,21 +167,22 @@ export function DashboardPage() {
           Schnellzugriff
         </h2>
         <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {modules.map((item) => (
+          {modules.map((item) => {
+            const badge = accessBadge(item)
+            return (
             <li key={item.id}>
               <Link to={item.path} className="block h-full focus-visible:outline-petrol">
                 <Card className="h-full p-4 hover:border-petrol">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="font-semibold">{item.label}</h3>
-                    <Badge tone={item.phase === 'available' ? 'petrol' : 'warning'}>
-                      {item.phase === 'available' ? 'Systemstatus' : 'In Entwicklung'}
-                    </Badge>
+                    <Badge tone={badge.tone}>{badge.label}</Badge>
                   </div>
                   <p className="mt-2 text-sm leading-6 text-muted">{item.summary}</p>
                 </Card>
               </Link>
             </li>
-          ))}
+            )
+          })}
         </ul>
       </section>
 
