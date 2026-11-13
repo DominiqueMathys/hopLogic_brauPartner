@@ -86,8 +86,12 @@ class Partner(Base):
 
     @property
     def last_contact_at(self) -> datetime | None:
-        return None
+        from app.services.timeline import partner_last_contact
+
+        return partner_last_contact(self)
 
     @property
     def next_activity_on(self) -> date | None:
-        return None
+        from app.services.timeline import partner_next_activity
+
+        return partner_next_activity(self)

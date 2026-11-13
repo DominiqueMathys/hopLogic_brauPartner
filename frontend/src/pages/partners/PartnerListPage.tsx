@@ -13,6 +13,8 @@ import { LoadingState } from '../../components/ui/LoadingState.tsx'
 import { Select } from '../../components/ui/Select.tsx'
 import {
   choiceLabel,
+  formatDate,
+  formatDateTime,
   formatLocation,
   partnerStatusOptions,
   partnerTypeOptions,
@@ -65,12 +67,12 @@ const columns: DataColumn<Partner>[] = [
   {
     id: 'contact',
     header: 'Letzter Kontakt',
-    cell: () => <span title="Aktivitäten sind noch nicht implementiert.">Nicht implementiert</span>,
+    cell: (row) => (row.last_contact_at ? formatDateTime(row.last_contact_at) : 'Kein Eintrag'),
   },
   {
     id: 'next',
     header: 'Nächste Aktivität',
-    cell: () => <span title="Aktivitäten sind noch nicht implementiert.">Nicht implementiert</span>,
+    cell: (row) => (row.next_activity_on ? formatDate(row.next_activity_on) : 'Kein Eintrag'),
   },
 ]
 
@@ -215,7 +217,7 @@ export function PartnerListPage() {
             options={sortOptions}
             hint={
               query.sort === 'last_activity'
-                ? 'Aktivitäten werden noch nicht gespeichert. Sortiert wird nach dem Namen.'
+                ? 'Neueste Aktivität zuerst. Partner ohne Aktivität stehen am Ende.'
                 : undefined
             }
             onChange={(value) => {

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.partner import Partner
 from app.schemas.partner import PartnerWrite
+from app.services.timeline import attach_partner_timeline, last_activity_expression
 
 WRITABLE_FIELDS = (
     "company_name",
@@ -189,12 +190,17 @@ def query_partners(
         count_statement = count_statement.where(*filters)
         statement = statement.where(*filters)
     total = int(db.scalar(count_statement) or 0)
-    column = Partner.created_at if sort == "created_at" else Partner.company_name
-    ordered = column.desc() if direction == "desc" else column.asc()
-    rows = db.scalars(
-        statement.order_by(ordered, Partner.id.asc()).offset((page - 1) * page_size).limit(page_size)
-    ).all()
-    return list(rows), total
+    if sort == "created_at":
+        ordered = Partner.created_at.desc() if direction == "desc" else Partner.created_at.asc()
+    elif sort == "last_activity":
+        ordered = last_activity_expression(direction)
+    else:
+        ordered = Partner.company_name.desc() if direction == "desc" else Partner.company_name.asc()
+    rows = list(
+        db.scalars(statement.order_by(ordered, Partner.company_name.asc(), Partner.id.asc()).offset((page - 1) * page_size).limit(page_size)).all()
+    )
+    attach_partner_timeline(db, rows)
+    return rows, total
 
 
 def partner_summary(db: Session) -> tuple[int, int]:

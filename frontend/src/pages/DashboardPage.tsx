@@ -1,28 +1,52 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
+import { fetchActivities, fetchTaskSummary, fetchTasks } from '../api/crm.ts'
 import { fetchPartnerSummary } from '../api/partners.ts'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { DataTable, type DataColumn } from '../components/ui/DataTable.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { LoadingState } from '../components/ui/LoadingState.tsx'
-import type { PartnerSummary } from '../domain/partners.ts'
+import { labelOf, taskPriorityOptions, type Activity, type Task, type TaskSummary } from '../domain/crm.ts'
+import { formatDateTime, type PartnerSummary } from '../domain/partners.ts'
 import { navigation, type NavItem } from '../navigation.ts'
 import { usePageTitle } from '../usePageTitle.ts'
 
-type ActivityRow = { id: string }
-type TaskRow = { id: string }
-
-const activityColumns: DataColumn<ActivityRow>[] = [
-  { id: 'when', header: 'Zeitpunkt', cell: () => null },
-  { id: 'area', header: 'Bereich', cell: () => null },
-  { id: 'text', header: 'Beschreibung', cell: () => null },
+const activityColumns: DataColumn<Activity>[] = [
+  { id: 'when', header: 'Zeitpunkt', cell: (row) => formatDateTime(row.occurred_at) },
+  { id: 'area', header: 'Bereich', cell: (row) => row.company_name ?? row.contact_name ?? 'Ohne Zuordnung' },
+  {
+    id: 'text',
+    header: 'Beschreibung',
+    cell: (row) => (
+      <Link to="/aktivitaeten" className="font-semibold text-petrol">
+        {row.title}
+      </Link>
+    ),
+  },
 ]
 
-const taskColumns: DataColumn<TaskRow>[] = [
-  { id: 'task', header: 'Aufgabe', cell: () => null },
-  { id: 'due', header: 'Fällig', cell: () => null },
-  { id: 'priority', header: 'Priorität', cell: () => null },
+const taskColumns: DataColumn<Task>[] = [
+  {
+    id: 'task',
+    header: 'Aufgabe',
+    cell: (row) => (
+      <Link to={`/aufgaben/${row.id}/bearbeiten`} className={row.is_overdue ? 'font-semibold text-critical' : 'font-semibold text-petrol'}>
+        {row.title}
+      </Link>
+    ),
+  },
+  {
+    id: 'due',
+    header: 'Fällig',
+    cell: (row) => (
+      <span className={row.is_overdue ? 'font-semibold text-critical' : undefined}>
+        {formatDateTime(row.due_at)}
+        {row.is_overdue ? ' · Überfällig' : ''}
+      </span>
+    ),
+  },
+  { id: 'priority', header: 'Priorität', cell: (row) => labelOf(taskPriorityOptions, row.priority) },
 ]
 
 const kpis = ['Offene Verkaufschancen', 'Bestellungen', 'Offene Service-Tickets']
@@ -96,6 +120,139 @@ function ActivePartnersCard() {
   )
 }
 
+function TaskSignals() {
+  const [summary, setSummary] = useState<TaskSummary | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void fetchTaskSummary()
+      .then((result) => {
+        if (active) {
+          setSummary(result)
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true)
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (failed) {
+    return <EmptyState compact title="Aufgaben nicht verfügbar" description="Die Aufgaben konnten nicht gelesen werden." />
+  }
+  if (!summary) {
+    return <LoadingState label="Aufgabenhinweise werden geladen" />
+  }
+
+  const note =
+    summary.open > 0 && summary.open === summary.open_demo
+      ? 'Die offenen Aufgaben sind ausschliesslich gekennzeichnete Testdaten.'
+      : 'Gezählt werden gespeicherte Aufgaben. Eine automatische Benachrichtigung folgt später.'
+
+  return (
+    <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Signal label="Überfällig" value={summary.overdue} to="/aufgaben?faellig=overdue" />
+        <Signal label="Bald fällig" value={summary.due_soon} to="/aufgaben?faellig=soon" />
+        <Signal label="Dringend" value={summary.urgent} to="/aufgaben?faellig=urgent" />
+      </div>
+      <p className="text-sm leading-6 text-muted">{note}</p>
+    </div>
+  )
+}
+
+function Signal({ label, value, to }: { label: string; value: number; to: string }) {
+  return (
+    <Link to={to} className="border border-line px-4 py-3 hover:border-petrol">
+      <p className="text-sm font-semibold">{label}</p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
+    </Link>
+  )
+}
+
+function RecentActivities() {
+  const [rows, setRows] = useState<Activity[] | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void fetchActivities({ page: 1 })
+      .then((result) => {
+        if (active) {
+          setRows(result.items.slice(0, 5))
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true)
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (failed) {
+    return <EmptyState compact title="Aktivitäten nicht verfügbar" description="Die Chronik konnte nicht gelesen werden." />
+  }
+  if (!rows) {
+    return <LoadingState label="Aktivitäten werden geladen" />
+  }
+  return (
+    <DataTable
+      caption="Letzte Aktivitäten"
+      columns={activityColumns}
+      rows={rows}
+      rowKey={(row) => row.id}
+      empty={<EmptyState compact title="Keine Aktivitäten" description="Es sind noch keine Gespräche oder Notizen gespeichert." />}
+    />
+  )
+}
+
+function OpenTasks() {
+  const [rows, setRows] = useState<Task[] | null>(null)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void fetchTasks({ q: '', status: '', priority: '', accountOwner: '', partnerId: '', contactId: '', due: 'open', page: 1 })
+      .then((result) => {
+        if (active) {
+          setRows(result.items.slice(0, 5))
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setFailed(true)
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (failed) {
+    return <EmptyState compact title="Aufgaben nicht verfügbar" description="Die Aufgaben konnten nicht gelesen werden." />
+  }
+  if (!rows) {
+    return <LoadingState label="Aufgaben werden geladen" />
+  }
+  return (
+    <DataTable
+      caption="Anstehende Aufgaben"
+      columns={taskColumns}
+      rows={rows}
+      rowKey={(row) => row.id}
+      empty={<EmptyState compact title="Keine Aufgaben" description="Es sind keine offenen Aufgaben gespeichert." />}
+    />
+  )
+}
+
 export function DashboardPage() {
   usePageTitle('Dashboard')
   const modules = navigation.filter((item) => item.id !== 'dashboard')
@@ -127,38 +284,21 @@ export function DashboardPage() {
         ))}
       </section>
 
+      <Card className="p-4">
+        <h2 className="text-base font-semibold">Aufgabenhinweise</h2>
+        <div className="mt-3">
+          <TaskSignals />
+        </div>
+      </Card>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <h2 className="border-b border-line px-4 py-3 text-base font-semibold">Letzte Aktivitäten</h2>
-          <DataTable
-            caption="Letzte Aktivitäten"
-            columns={activityColumns}
-            rows={[]}
-            rowKey={(row) => row.id}
-            empty={
-              <EmptyState
-                compact
-                title="Keine Aktivitäten"
-                description="Gespräche, Notizen und Termine erscheinen hier, sobald Einträge vorhanden sind."
-              />
-            }
-          />
+          <RecentActivities />
         </Card>
         <Card>
           <h2 className="border-b border-line px-4 py-3 text-base font-semibold">Anstehende Aufgaben</h2>
-          <DataTable
-            caption="Anstehende Aufgaben"
-            columns={taskColumns}
-            rows={[]}
-            rowKey={(row) => row.id}
-            empty={
-              <EmptyState
-                compact
-                title="Keine Aufgaben"
-                description="Offene Aufgaben erscheinen hier, sobald Einträge vorhanden sind."
-              />
-            }
-          />
+          <OpenTasks />
         </Card>
       </div>
 

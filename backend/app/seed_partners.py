@@ -17,7 +17,7 @@ DEMO_PARTNERS: tuple[dict[str, object], ...] = (
     {
         "demo_key": "demo-ristorante-lago",
         "company_name": "Ristorante Lago",
-        "erp_customer_number": "DEMO-1001",
+        "erp_customer_number": "10457",
         "partner_type": "restaurant",
         "industry": "Gastronomie",
         "street": "Via Test 1",
@@ -29,11 +29,14 @@ DEMO_PARTNERS: tuple[dict[str, object], ...] = (
         "email": "ristorante-lago@example.com",
         "website": "https://example.com/ristorante-lago",
         "status": "aktiv",
-        "account_owner": "Demo-Betreuung Süd",
+        "account_owner": "Sandra Lutz",
         "acquisition_source": "Messe",
         "priority": "hoch",
         "first_contact_on": date(2024, 3, 12),
-        "notes": DEMO_NOTE,
+        "notes": (
+            f"{DEMO_NOTE} Die Kundennummer 10457 ist eine fiktive Case-Nummer "
+            "und keine echte Kundennummer des Liechtensteiner Brauhauses."
+        ),
     },
     {
         "demo_key": "demo-hotel-alpenblick",

@@ -5,11 +5,12 @@ type ModalProps = {
   title: string
   onClose: () => void
   children: ReactNode
+  wide?: boolean
 }
 
 const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
 
-export function Modal({ open, title, onClose, children }: ModalProps) {
+export function Modal({ open, title, onClose, children, wide = false }: ModalProps) {
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
 
@@ -70,7 +71,11 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative z-10 w-full max-w-md border border-line bg-card p-5 shadow-lg"
+        className={
+          wide
+            ? 'relative z-10 max-h-[85vh] w-full max-w-2xl overflow-y-auto border border-line bg-card p-5 shadow-lg'
+            : 'relative z-10 w-full max-w-md border border-line bg-card p-5 shadow-lg'
+        }
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id={titleId} className="text-lg font-semibold">

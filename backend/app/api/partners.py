@@ -19,6 +19,7 @@ from app.services.partners import (
     restore_partner,
     update_partner,
 )
+from app.services.timeline import attach_partner_timeline
 
 router = APIRouter(prefix="/partners", tags=["vertriebspartner"])
 
@@ -27,6 +28,7 @@ def _save(db: Session, partner: Partner) -> Partner:
     try:
         db.commit()
         db.refresh(partner)
+        attach_partner_timeline(db, [partner])
     except IntegrityError:
         db.rollback()
         raise HTTPException(
@@ -129,7 +131,9 @@ def create_partner(payload: PartnerWrite, db: Session = Depends(get_db)) -> Part
 @router.get("/{partner_id}", response_model=PartnerRead)
 def read_partner(partner_id: UUID, db: Session = Depends(get_db)) -> Partner:
     try:
-        return require_partner(db, partner_id)
+        partner = require_partner(db, partner_id)
+        attach_partner_timeline(db, [partner])
+        return partner
     except PartnerServiceError as error:
         raise HTTPException(status_code=error.status_code, detail=error.message) from None
 

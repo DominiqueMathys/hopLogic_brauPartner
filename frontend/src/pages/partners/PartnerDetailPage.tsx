@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
+import { LinkedActivities, LinkedTasks, PartnerContacts } from '../../components/crm/LinkedRecords.tsx'
 import { ApiError, archivePartner, restorePartner } from '../../api/partners.ts'
 import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
@@ -133,22 +134,17 @@ export function PartnerDetailPage() {
             {
               id: 'contacts',
               label: 'Kontakte',
-              content: (
-                <NotReady
-                  title="Kontakte noch nicht implementiert"
-                  description="Zugeordnete Kontaktpersonen werden in einer späteren Phase erfasst. Es werden keine Kontakte angezeigt."
-                />
-              ),
+              content: <PartnerContacts partnerId={partner.id} />,
             },
             {
               id: 'activities',
               label: 'Aktivitäten',
-              content: (
-                <NotReady
-                  title="Aktivitäten noch nicht implementiert"
-                  description="Telefonate, Meetings, E-Mails und Notizen erscheinen hier chronologisch. Es sind keine Aktivitäten hinterlegt."
-                />
-              ),
+              content: <LinkedActivities partnerId={partner.id} owner={partner.account_owner ?? ''} />,
+            },
+            {
+              id: 'tasks',
+              label: 'Aufgaben',
+              content: <LinkedTasks partnerId={partner.id} />,
             },
             {
               id: 'opportunities',
@@ -243,16 +239,16 @@ function Overview({ partner }: { partner: Partner }) {
           <Field label="Priorität">{choiceLabel(priorityOptions, partner.priority)}</Field>
           <Field label="Erste Kontaktaufnahme">{formatDate(partner.first_contact_on)}</Field>
           <Field label="Letzter Kontakt">
-            {partner.last_contact_at ? formatDateTime(partner.last_contact_at) : 'Nicht implementiert'}
+            {partner.last_contact_at ? formatDateTime(partner.last_contact_at) : 'Kein Eintrag'}
           </Field>
           <Field label="Nächste Aktivität">
-            {partner.next_activity_on ? formatDate(partner.next_activity_on) : 'Nicht implementiert'}
+            {partner.next_activity_on ? formatDate(partner.next_activity_on) : 'Kein Eintrag'}
           </Field>
           <Field label="Erfasst am">{formatDateTime(partner.created_at)}</Field>
           <Field label="Zuletzt geändert">{formatDateTime(partner.updated_at)}</Field>
         </dl>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Telefonate, Meetings und Aufgaben werden noch nicht am Partner gespeichert.
+          Letzter Kontakt stammt aus den Aktivitäten. Die nächste Aktivität ist die früheste offene Aufgabe.
         </p>
         <div className="mt-4">
           <h3 className="text-sm font-semibold">Interne Bemerkungen</h3>

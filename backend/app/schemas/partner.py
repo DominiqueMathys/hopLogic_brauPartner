@@ -260,11 +260,11 @@ class PartnerRead(BaseModel):
     updated_at: datetime
     last_contact_at: datetime | None = Field(
         default=None,
-        description="Leer, bis Aktivitäten gespeichert werden.",
+        description="Jüngste nicht archivierte Aktivität dieses Partners.",
     )
     next_activity_on: date | None = Field(
         default=None,
-        description="Leer, bis Aktivitäten gespeichert werden.",
+        description="Frühestes Fälligkeitsdatum einer offenen Aufgabe dieses Partners.",
     )
 
 

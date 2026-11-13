@@ -1,24 +1,33 @@
 import { Link, useLocation } from 'react-router'
 import { currentNavItem } from '../../navigation.ts'
 
-function partnerTrail(pathname: string): string[] {
-  if (pathname === '/vertriebspartner/neu') {
-    return ['Neuer Partner']
+function detailTrail(pathname: string, root: string, labels: { create: string; edit: string; detail: string }): string[] {
+  if (pathname === `${root}/neu`) {
+    return [labels.create]
   }
-  if (/^\/vertriebspartner\/[^/]+\/bearbeiten$/.test(pathname)) {
-    return ['Bearbeiten']
+  if (new RegExp(`^${root}/[^/]+/bearbeiten$`).test(pathname)) {
+    return [labels.edit]
   }
-  if (/^\/vertriebspartner\/[^/]+$/.test(pathname)) {
-    return ['Partner']
+  if (new RegExp(`^${root}/[^/]+$`).test(pathname)) {
+    return [labels.detail]
   }
   return []
+}
+
+function pageTrail(pathname: string): string[] {
+  return [
+    ...detailTrail(pathname, '/vertriebspartner', { create: 'Neuer Partner', edit: 'Bearbeiten', detail: 'Partner' }),
+    ...detailTrail(pathname, '/kontakte', { create: 'Neuer Kontakt', edit: 'Bearbeiten', detail: 'Kontakt' }),
+    ...detailTrail(pathname, '/aktivitaeten', { create: 'Neue Aktivität', edit: 'Bearbeiten', detail: 'Aktivität' }),
+    ...detailTrail(pathname, '/aufgaben', { create: 'Neue Aufgabe', edit: 'Bearbeiten', detail: 'Aufgabe' }),
+  ]
 }
 
 export function Breadcrumbs() {
   const { pathname } = useLocation()
   const current = currentNavItem(pathname)
   const onDashboard = pathname === '/'
-  const trail = partnerTrail(pathname)
+  const trail = pageTrail(pathname)
 
   return (
     <nav aria-label="Brotkrumen">
