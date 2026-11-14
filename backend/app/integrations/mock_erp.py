@@ -7,6 +7,7 @@ a connection to the ERP of Liechtensteiner Brauhaus.
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -208,8 +209,14 @@ class MockErpConnector:
             ).fetchone()
             if existing is not None:
                 return ErpSubmitResult(request.idempotency_key, existing["reference"], existing["status"], SOURCE_MOCK)
+            token_row = connection.execute("SELECT value FROM flags WHERE name = 'dataset'").fetchone()
+            if token_row is None:
+                token = uuid.uuid4().hex[:8]
+                connection.execute("INSERT INTO flags (name, value) VALUES ('dataset', ?)", (token,))
+            else:
+                token = token_row["value"]
             count = connection.execute("SELECT COUNT(*) FROM orders").fetchone()[0] + 1
-            reference = f"MOCK-AUF-{count:05d}"
+            reference = f"MOCK-AUF-{token}-{count:05d}"
             connection.execute(
                 """
                 INSERT INTO orders

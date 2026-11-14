@@ -1,6 +1,6 @@
 # Architektur
 
-HopLogic BrauPartner ist in dieser Phase eine schlanke Dreischicht-Anwendung.
+HopLogic BrauPartner ist eine Anwendung mit drei Schichten und einer abgetrennten ERP-Testquelle.
 
 ```mermaid
 flowchart LR
@@ -8,43 +8,70 @@ flowchart LR
   frontend[React und Vite]
   backend[FastAPI]
   database[PostgreSQL]
+  mock[SQLite Mock-ERP]
+  worker[Worker-Prozess]
 
   browser --> frontend
   frontend -->|"/api"| backend
   backend --> database
+  backend --> mock
+  worker --> database
+  worker --> mock
 ```
 
 ## Frontend
 
-`frontend/` enthält die Oberfläche mit React, TypeScript und Vite. Tailwind CSS gestaltet die Statusseite. Der Vite-Entwicklungsserver nimmt Aufrufe unter `/api` entgegen und leitet sie an FastAPI weiter. Im Container ist das Ziel `http://backend:8000`, lokal `http://localhost:8000`.
+`frontend/` enthält React, TypeScript, Vite, Tailwind CSS und React Router. Der Entwicklungsserver nimmt `/api` entgegen und leitet die Aufrufe an FastAPI weiter. Die Zieladresse steht in `API_PROXY_TARGET` und trägt kein `VITE_`-Präfix, damit sie nicht ins ausgelieferte JavaScript gelangt.
 
-Die Zieladresse liest Vite aus `API_PROXY_TARGET`. Diese Variable trägt kein `VITE_`-Präfix und gelangt dadurch nicht in das JavaScript der Oberfläche.
+Mutierende Aufrufe senden das CSRF-Token aus dem Cookie `bp_csrf` mit. Sitzung und Token liegen in Cookies. Die Oberfläche zeigt einen Speichervorgang erst nach einer erfolgreichen API-Antwort als abgeschlossen.
+
+Seiten gibt es für Partner, Kontakte, Aktivitäten, Aufgaben, Verkaufschancen, Produkte, Bestellungen, Service, Segmente, Kampagnen, Automatisierungen, Benachrichtigungen, Reporting, Benutzer und die ERP-Integration. Noch nicht umgesetzte Menüpunkte bleiben als geplante Module sichtbar.
 
 ## Backend
 
-`backend/app/` ist nach Verantwortungen getrennt:
+`backend/app/` trennt HTTP, Fachlogik und Persistenz.
 
 | Pfad | Aufgabe |
 | --- | --- |
-| `main.py` | Anwendung, CORS und Routen |
+| `main.py` | Anwendung, CORS, Routen, eingebetteter Worker |
 | `config.py` | Einstellungen aus Umgebungsvariablen und `.env` |
-| `database.py` | Engine, Sitzungen und Prüfabfrage |
-| `api/` | HTTP-Routen |
-| `schemas/` | Pydantic-Modelle der Antworten |
-| `models/` | SQLAlchemy-Modelle der späteren Fachmodule |
+| `database.py` | Engine und Sitzungen |
+| `access.py` | Berechtigungscodes und Zuordnung von Route zu Recht |
+| `authorize.py` | Prüfung von Sitzung und CSRF |
+| `security.py` | Passwort-Hash und Cookies |
+| `api/` | REST-Routen |
+| `schemas/` | Pydantic-Modelle |
+| `services/` | Fachlogik und Transaktionen |
+| `models/` | SQLAlchemy-Modelle |
+| `integrations/` | ERP-Protokoll, Mock-Connector, Abbildung der Daten |
+| `worker.py` | Zeitgesteuerte Automatisierungen und ERP-Läufe |
 
-`GET /api/health` prüft den API-Prozess. `GET /api/health/db` führt `SELECT 1` aus. Schlägt die Datenbank fehl, antwortet die API mit Status 503 und der Meldung «Datenbank nicht erreichbar». Verbindungsdetails bleiben in der Antwort aus.
+`GET /api/health` prüft den API-Prozess. `GET /api/health/db` führt `SELECT 1` aus. Bei einem Datenbankfehler antwortet die API mit Status 503 und ohne Verbindungsdetails.
+
+Unbekannte `/api`-Pfade sind standardmässig gesperrt. SQLAlchemy verwendet gebundene Parameter. React setzt Texte als Textknoten, nicht als HTML.
 
 ## Datenbank
 
-PostgreSQL 16 läuft als Dienst `db` in Docker Compose. SQLAlchemy spricht über den Treiber `psycopg` mit der Datenbank. Alembic verwaltet das Schema. Die erste Migration legt bewusst noch keine Fachtabellen an und erzeugt beim Anwenden nur die Alembic-Versionstabelle.
+PostgreSQL 16 hält die CRM-Daten. Alembic führt die Migrationen `0001_initial` bis `0008_integration` in einer Kette. `alembic heads` zeigt genau `0008_integration`.
 
-Neue Modelle kommen nach `backend/app/models/` und werden in `backend/app/models/__init__.py` importiert, damit Alembic sie erkennt.
+Fremdschlüssel verbinden Kontakte, Aktivitäten, Aufgaben, Deals, Bestellungen, Tickets, Kampagnen und ERP-Protokolle mit den Partnern. Bestellpositionen speichern Preis, Menge und Steuer zum Zeitpunkt der Bestellung. Eine spätere Katalogänderung schreibt diese Positionen nicht um.
 
-## Container
+Ein Neustart der API löscht keine gespeicherten Zeilen. Docker Compose legt die Datenbank in das Volume `postgres_data`.
 
-`docker-compose.yml` startet Datenbank, API und Oberfläche. Die API wartet auf PostgreSQL, führt `alembic upgrade head` aus und startet danach Uvicorn. Der Container gilt erst als bereit, wenn `/api/health/db` erfolgreich antwortet. Die Oberfläche startet nach diesem Zeitpunkt.
+## Hintergrundprozesse
 
-## Was diese Phase auslässt
+`app.worker` prüft fällige Automatisierungen und, wenn der Modus Mock-ERP ist und ein Intervall grösser als 0 ist, die entsprechenden Synchronisationen. Automatische Bestellübertragungen bleiben aus.
 
-Authentifizierung, Kontakte, Brauerei-Prozesse und weitere CRM-Fachlichkeit folgen später an den genannten Stellen, ohne den Grundaufbau zu wechseln.
+Lokal kann der Worker im API-Prozess mitlaufen, solange `AUTOMATION_EMBEDDED_WORKER` wahr ist und kein pytest-Lauf aktiv ist. Im Container übernimmt der Dienst `worker`, und der API-Prozess schaltet den eingebetteten Worker aus.
+
+## ERP-Integrationsschicht
+
+Die CRM-Module kennen keinen ERP-Hersteller. Sie rufen den Synchronisationsdienst auf. Dieser spricht nur das Connector-Protokoll.
+
+Registriert ist allein der Mock-Connector. Er liest und schreibt die SQLite-Datei `data/mock-erp.sqlite`. Diese Datei ist nicht die CRM-Datenbank. Alle Zeilen sind fiktive Testdaten.
+
+Ein externer Connector ist nicht registriert und öffnet keine Verbindung. Der Modus «Externes ERP» bleibt gesperrt, bis eine Connector-Klasse registriert ist und `ERP_BASE_URL` mit `https://` sowie Client-ID und Secret ausserhalb des Quellcodes gesetzt sind. Eine spätere Klasse muss TLS, ein Zeitlimit und eine begrenzte Zahl von Wiederholungen verwenden.
+
+Führend ist die externe Quelle für ERP-Kundennummer, ERP-Kundenstatus, Artikelnummer und den aktuellen Katalogpreis. Führend ist das CRM für Notizen, Aktivitäten, Aufgaben, Segmente, Betreuung und den CRM-Partnerstatus. Abweichende, bereits gefüllte Stammdaten werden nicht überschrieben. Sie erscheinen als Konflikt.
+
+Der CRM-Bestellstatus und der technische Übertragungsstatus sind getrennte Felder. Eine erfolgreiche Übertragung ist keine Lieferung und keine Rechnung. Der Übertragungsschlüssel ist `crm-{Bestell-ID}`. Eine unklare Antwort wird nicht erneut gesendet, sondern zur manuellen Prüfung markiert. Neue Mock-Referenzen enthalten ein Kennzeichen der Testdatei, damit ein neues Mock-ERP keine bereits gespeicherte Referenz wiederverwendet.

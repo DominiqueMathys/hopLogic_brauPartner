@@ -1,82 +1,109 @@
 # HopLogic BrauPartner
 
-CRM-Grundlage für das Liechtensteiner Brauhaus im FHGR-Modul Digital Relationship Management.
+CRM-Webanwendung für das FHGR-Projekt «HopLogic BrauPartner» des Liechtensteiner Brauhauses.
 
-Diese erste Phase stellt die technische Basis bereit: eine React-Oberfläche, eine FastAPI-Schnittstelle und PostgreSQL. Die Oberfläche prüft beim Start, ob API und Datenbank erreichbar sind. Die fachlichen CRM-Module bauen in den nächsten Phasen auf dieser Struktur auf.
+Die Anwendung verbindet eine React-Oberfläche mit einer FastAPI-Schnittstelle und PostgreSQL. Sie umfasst Vertriebspartner, Kontakte, Aktivitäten, Aufgaben, Verkaufschancen, Produkte, Bestellungen, Kundenservice, Marketing, Automatisierungen, Reporting, Anmeldung mit Rollen und eine ERP-Testintegration. Das Mock-ERP ist eine lokale Testdatenbank mit fiktiven Daten. Es ist keine Verbindung zum ERP des Liechtensteiner Brauhauses.
+
+Die Anwendung ist für die lokale Entwicklung, automatisierte Tests und eine kontrollierte Demo vorbereitet. Sie ist damit nicht als produktiv freigegeben.
+
+## Technologiestack
+
+- Frontend: React, TypeScript, Vite, Tailwind CSS, React Router
+- Backend: FastAPI, Pydantic, SQLAlchemy, Alembic
+- Datenbank: PostgreSQL 16
+- Tests: pytest
+- Container: Docker Compose, sofern Docker lokal vorhanden ist
 
 ## Voraussetzungen
 
-- Docker Desktop mit Docker Compose v2
+- Python 3.12
+- Node.js 22
+- Ein erreichbares PostgreSQL 16
 - Git
-- Für Tests und die Entwicklung ohne Container: Python 3.12 und Node.js 22
+- Docker Desktop mit Compose v2, wenn die Anwendung in Containern laufen soll
 
-## Start mit Docker Compose
+## Installation
 
 Im Projektverzeichnis:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
+Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -m alembic -c backend\alembic.ini upgrade head
+cd frontend
+npm ci
+```
+
+`.env` bleibt ausserhalb von Git. Die Werte in `.env.example` sind Platzhalter für die eigene Entwicklungsumgebung.
+
+## Start
+
+API:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
+```
+
+Oberfläche, in einem zweiten Terminal:
+
+```powershell
+cd frontend
+npm run dev
+```
+
+Die Oberfläche liegt auf http://127.0.0.1:5173 und leitet `/api` an http://127.0.0.1:8000 weiter. Die API-Dokumentation liegt auf http://127.0.0.1:8000/docs.
+
+Mit Docker, sofern der Befehl `docker` verfügbar ist:
 
 ```powershell
 Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Dasselbe erledigt `.\scripts\start.ps1`. Das Skript legt `.env` aus der Vorlage an, falls die Datei noch fehlt.
+Dieselbe Vorbereitung erledigt `.\scripts\start.ps1`. In dieser Entwicklungsumgebung war Docker nicht installiert. Der Containerstart wurde deshalb hier nicht ausgeführt.
 
-Danach sind die Dienste unter diesen Adressen erreichbar:
+## Demo-Zugang
 
-| Dienst | Adresse |
-| --- | --- |
-| Oberfläche | http://localhost:5173 |
-| API | http://localhost:8000 |
-| API-Dokumentation | http://localhost:8000/docs |
-| API-Health | http://localhost:8000/api/health |
-| Datenbank-Health | http://localhost:8000/api/health/db |
-| PostgreSQL | localhost:5432 |
+Den ersten Administrator legt dieser Befehl an, solange noch kein reales Administratorkonto existiert:
 
-Die Oberfläche ruft `/api/health` und `/api/health/db` auf. Im Container leitet Vite diese Pfade an den Backend-Dienst weiter. Beide Karten stehen auf **Erreichbar**, wenn Oberfläche, API und Datenbank verbunden sind.
+```powershell
+$env:PYTHONPATH = "backend"
+.\.venv\Scripts\python.exe -m app.bootstrap_admin
+```
 
-Beenden im laufenden Terminal mit `Ctrl+C`. In einem zweiten Terminal stoppt `docker compose down` die Dienste. Datenbankdaten bleiben im Docker-Volume `postgres_data` erhalten.
+Das Passwort wird nur in die gitignorierte Datei `data/local-dev-access.txt` geschrieben. Es gehört nicht ins Repository und nicht in die Dokumentation. Demo-Konten entstehen nur, wenn `ENVIRONMENT` auf `development` steht. Für eine andere Umgebung `CREATE_DEMO_USERS=0` setzen.
+
+Fiktive CRM-Daten laden die Skripte unter `scripts\`. Sie sind wiederholbar und erzeugen keine Dubletten. Ein erneutes Laden darf eine bereits übertragene Demo-Bestellung nicht unbedacht zurücksetzen. Die Skripte deshalb nicht gegen eine Datenbank ausführen, deren Demo-Ablauf erhalten bleiben soll.
 
 ## Tests
 
 ```powershell
-.\scripts\test.ps1
-```
-
-Die Tests laufen ohne PostgreSQL. Sie prüfen die API-Antworten und eine simulierte Datenbankprüfung. Interne Fehlerdetails, etwa Verbindungsdaten, verlassen die API dabei nicht.
-
-Frontend prüfen:
-
-```powershell
+.\.venv\Scripts\python.exe -m pytest
 cd frontend
-npm ci
 npm run lint
 npm run build
 ```
 
-## Zugangsdaten
-
-Lokale Werte stehen in `.env`. Diese Datei bleibt ausserhalb von Git. `.env.example` enthält Platzhalter für die eigene Entwicklungsumgebung. Produktive Zugangsdaten werden hier nicht abgelegt.
-
-Passwörter in `DATABASE_URL` bleiben URL-sicher: Buchstaben, Ziffern und Bindestrich. Docker Compose setzt für den Backend-Container eine eigene URL mit dem Hostnamen `db`.
+`.\scripts\test.ps1` installiert die Python-Abhängigkeiten und startet pytest. Die Tests brauchen die PostgreSQL-Datenbank aus `.env`. Schreibende Tests laufen in einer Transaktion, die am Ende zurückgerollt wird.
 
 ## Projektstruktur
 
 ```text
-frontend/    React, TypeScript, Vite, Tailwind CSS
-backend/     FastAPI, SQLAlchemy, Alembic
-database/    Hinweise zur PostgreSQL-Datenhaltung
-tests/       Automatisierte API-Tests
-docs/        Architektur und Entwicklungsablauf
-scripts/     Start- und Testskripte
-.github/     Continuous Integration
+frontend/     React-Oberfläche
+backend/      FastAPI, Modelle, Migrationen, Mock-ERP
+tests/        pytest
+database/     Hinweise zur PostgreSQL-Haltung
+docs/         Architektur, Nutzung, Tests, Bereitstellung
+scripts/      Start und Testdaten
+.github/      CI und Vorlagen für Issues und Pull Requests
 ```
-
-## Git
-
-Das Repository gehört ausschliesslich in dieses Projektverzeichnis. Es gibt noch keinen Commit und kein Remote.
 
 ## Weitere Dokumentation
 
 - [Architektur](docs/architecture.md)
-- [Entwicklung](docs/development.md)
-- [Datenbank](database/README.md)
+- [Benutzung](docs/user-guide.md)
+- [Entwicklung und GitHub](docs/development.md)
+- [Tests](docs/testing.md)
+- [Bereitstellung](docs/deployment.md)
+- [Mitarbeit](CONTRIBUTING.md)

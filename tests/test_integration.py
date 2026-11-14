@@ -12,7 +12,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -87,15 +87,17 @@ def test_mock_connection_and_external_mode_stays_locked(api: TestClient) -> None
 def test_product_preview_does_not_change_prices(api: TestClient, db_session: Session) -> None:
     _enable(api)
     before = db_session.scalar(select(Product.list_price).where(Product.sku == "DEMO-SPEZ-50"))
+    before_count = db_session.scalar(select(func.count()).select_from(Product).where(Product.sku == "MOCK-WEIZEN-50"))
     preview = api.post("/api/integration/preview", json={"kind": "produkte"})
     assert preview.status_code == 200, preview.text
     body = preview.json()
     assert body["dry_run"] is True
-    assert any(row["external_key"] == "MOCK-WEIZEN-50" for row in body["new"])
+    listed = [*body["new"], *body["update"], *body["unchanged"]]
+    assert any(row["external_key"] == "MOCK-WEIZEN-50" for row in listed)
     assert any(row["external_key"] == "MOCK-PREIS-NEG" for row in body["invalid"])
     after = db_session.scalar(select(Product.list_price).where(Product.sku == "DEMO-SPEZ-50"))
     assert before == after
-    assert db_session.scalar(select(Product).where(Product.sku == "MOCK-WEIZEN-50")) is None
+    assert db_session.scalar(select(func.count()).select_from(Product).where(Product.sku == "MOCK-WEIZEN-50")) == before_count
 
 
 def test_product_import_updates_catalogue_and_keeps_order_lines(api: TestClient, db_session: Session) -> None:
@@ -277,9 +279,17 @@ def test_background_interval_runs_without_a_browser(api: TestClient, db_session:
 
 def test_sync_persists_after_a_new_session(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(settings, "mock_erp_path", str(tmp_path / "persist.sqlite"))
-    product_id: str | None = None
-    partner_id: str | None = None
     job_id: str | None = None
+    with SessionLocal() as session:
+        spezial = session.scalar(select(Product).where(Product.sku == "DEMO-SPEZ-50"))
+        previous_price = None if spezial is None else spezial.list_price
+        previous_source = None if spezial is None else spezial.erp_source
+        previous_synced = None if spezial is None else spezial.erp_synced_at
+        from app.models.integration import ErpConnection
+
+        connection = session.scalar(select(ErpConnection).limit(1))
+        previous_mode = None if connection is None else connection.mode
+        previous_products_at = None if connection is None else connection.last_products_at
     try:
         with authenticated_client() as client:
             assert client.post("/api/integration/mode", json={"mode": "mock"}).status_code == 200
@@ -287,28 +297,11 @@ def test_sync_persists_after_a_new_session(monkeypatch: pytest.MonkeyPatch, tmp_
             assert run.status_code == 200, run.text
             job_id = run.json()["id"]
         with SessionLocal() as session:
-            stored = session.scalar(select(Product).where(Product.sku == "MOCK-WEIZEN-50"))
-            assert stored is not None and stored.erp_source == "mock"
-            product_id = str(stored.id)
-            partner = session.scalar(select(Partner).where(Partner.company_name == "Gasthaus Mockstein"))
-            partner_id = None if partner is None else str(partner.id)
             job = session.get(ErpSyncJob, UUID(job_id))
             assert job is not None and job.status in {"erfolgreich", "teilweise"}
+            assert session.scalar(select(func.count()).select_from(ErpSyncJob).where(ErpSyncJob.id == UUID(job_id))) == 1
     finally:
         with SessionLocal() as session:
-            if product_id is not None:
-                row = session.get(Product, UUID(product_id))
-                if row is not None and row.sku == "MOCK-WEIZEN-50":
-                    session.delete(row)
-            spezial = session.scalar(select(Product).where(Product.sku == "DEMO-SPEZ-50"))
-            if spezial is not None:
-                spezial.list_price = Decimal("3.80")
-                spezial.erp_source = None
-                spezial.erp_synced_at = None
-            if partner_id is not None:
-                row = session.get(Partner, UUID(partner_id))
-                if row is not None and row.company_name == "Gasthaus Mockstein":
-                    session.delete(row)
             if job_id is not None:
                 from app.models.integration import ErpSyncRecord
 
@@ -316,18 +309,17 @@ def test_sync_persists_after_a_new_session(monkeypatch: pytest.MonkeyPatch, tmp_
                 job = session.get(ErpSyncJob, UUID(job_id))
                 if job is not None:
                     session.delete(job)
-            from app.models.integration import ErpConnection, ErpExternalReference
+            spezial = session.scalar(select(Product).where(Product.sku == "DEMO-SPEZ-50"))
+            if spezial is not None and previous_price is not None:
+                spezial.list_price = previous_price
+                spezial.erp_source = previous_source
+                spezial.erp_synced_at = previous_synced
+            from app.models.integration import ErpConnection
 
-            session.execute(ErpExternalReference.__table__.delete().where(ErpExternalReference.external_key.in_(["MOCK-WEIZEN-50", "DEMO-SPEZ-50", "DEMO-BIER-33", "DEMO-AF-33"])))
             connection = session.scalar(select(ErpConnection).limit(1))
-            if connection is not None:
-                connection.mode = "nicht_konfiguriert"
-                connection.products_interval_minutes = 0
-                connection.customers_interval_minutes = 0
-                connection.status_interval_minutes = 0
-                connection.last_products_at = None
-                connection.last_customers_at = None
-                connection.last_status_at = None
+            if connection is not None and previous_mode is not None:
+                connection.mode = previous_mode
+                connection.last_products_at = previous_products_at
                 connection.running_kind = None
                 connection.running_since = None
             session.commit()

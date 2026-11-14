@@ -2,6 +2,8 @@
 
 Die alltägliche Arbeit geht vom Projektverzeichnis `hopLogic_brauPartner` aus. Befehle für Git gehören in dieses Verzeichnis, damit sie das Repository des übergeordneten Benutzerordners nicht betreffen.
 
+Branches, Pull Requests und der Review stehen in [CONTRIBUTING.md](../CONTRIBUTING.md). Architektur, Benutzung, Tests und Bereitstellung liegen unter `docs/`.
+
 ## Täglicher Start
 
 ```powershell

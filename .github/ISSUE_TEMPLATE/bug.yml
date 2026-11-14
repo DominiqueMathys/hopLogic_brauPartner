@@ -1,0 +1,29 @@
+name: Fehler
+description: Ein beobachtetes Fehlverhalten der Anwendung
+title: "Fix: "
+labels: []
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte
+      description: Was wurde geklickt oder aufgerufen?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsächliches Verhalten
+    validations:
+      required: true
+  - type: input
+    id: role
+    attributes:
+      label: Rolle
+      placeholder: administrator
