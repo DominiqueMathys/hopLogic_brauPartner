@@ -82,9 +82,9 @@ from app.services.care_queries import (
 from app.services.crm import CrmServiceError, insert_task
 
 IDENTITY_NOTICE = (
-    "Bis Phase 08 gibt es kein Benutzerkonto. Es werden nur Meldungen zum eingegebenen Anzeigenamen gezeigt, "
-    "nicht die Meldungen anderer Personen."
+    "Die Ansicht ist auf einen Namen eingeschränkt. Meldungen anderer Personen werden dabei nicht gemischt."
 )
+ACCOUNT_NOTICE = "Hinweise für das angemeldete Konto. Meldungen anderer Personen werden nicht angezeigt."
 PREVIEW_NOTICE = "Vorschau der aktuellen Zielgruppe. Die Liste wird erst bei der Aktivierung festgehalten."
 
 
@@ -739,6 +739,7 @@ def list_notifications(
     unread_only: bool,
     page: int,
     page_size: int,
+    bound: bool = False,
 ) -> NotificationList:
     if not recipient:
         return NotificationList(
@@ -774,12 +775,12 @@ def list_notifications(
         unread=unread,
         page=page,
         page_size=page_size,
-        identity_limited=True,
-        notice=IDENTITY_NOTICE,
+        identity_limited=not bound,
+        notice=ACCOUNT_NOTICE if bound else IDENTITY_NOTICE,
     )
 
 
-def notification_summary(db: Session, recipient: str | None) -> NotificationSummary:
+def notification_summary(db: Session, recipient: str | None, *, bound: bool = False) -> NotificationSummary:
     if not recipient:
         return NotificationSummary(unread=0, identity_limited=True, notice=IDENTITY_NOTICE)
     unread = int(
@@ -791,7 +792,7 @@ def notification_summary(db: Session, recipient: str | None) -> NotificationSumm
         )
         or 0
     )
-    return NotificationSummary(unread=unread, identity_limited=True, notice=IDENTITY_NOTICE)
+    return NotificationSummary(unread=unread, identity_limited=not bound, notice=ACCOUNT_NOTICE if bound else IDENTITY_NOTICE)
 
 
 def mark_notification_read(db: Session, notification_id: UUID, recipient: str) -> NotificationRead:

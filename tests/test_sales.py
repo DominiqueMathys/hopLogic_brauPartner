@@ -8,6 +8,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
+from support import AuthClient, authenticated_client, login_session
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -16,6 +17,7 @@ from app.main import app
 from app.models.contact import CompanyContact, Contact
 from app.models.partner import Partner
 from app.models.sales import Deal, DealStageHistory, Order, OrderItem, Product
+from app.models.task import Task
 from app.services.money import line_amounts
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,7 +54,8 @@ def api(db_session: Session) -> Iterator[TestClient]:
         yield db_session
 
     app.dependency_overrides[get_db] = override
-    with TestClient(app) as client:
+    with AuthClient(app) as client:
+        login_session(client, db_session)
         yield client
     app.dependency_overrides.pop(get_db, None)
 
@@ -452,7 +455,7 @@ def test_sales_persists_in_postgresql() -> None:
     suffix = uuid4().hex[:8]
     partner_id: str | None = None
     try:
-        with TestClient(app) as client:
+        with authenticated_client() as client:
             partner_id = create_partner(client, suffix)
             contact_id = create_contact(client, suffix, partner_id)
             product_id = create_product(client, suffix)
@@ -490,6 +493,7 @@ def test_sales_persists_in_postgresql() -> None:
                     order_ids = select(Order.id).where(Order.partner_id == partner.id)
                     deal_ids = select(Deal.id).where(Deal.partner_id == partner.id)
                     contact_ids = select(CompanyContact.contact_id).where(CompanyContact.partner_id == partner.id)
+                    session.execute(delete(Task).where(Task.partner_id == partner.id))
                     session.execute(delete(OrderItem).where(OrderItem.order_id.in_(order_ids)))
                     session.execute(delete(Order).where(Order.partner_id == partner.id))
                     session.execute(delete(DealStageHistory).where(DealStageHistory.deal_id.in_(deal_ids)))

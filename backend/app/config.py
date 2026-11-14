@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     ticket_max_bytes: int = 5_242_880
     automation_embedded_worker: bool = True
     automation_interval_seconds: int = 30
+    session_cookie_secure: bool = False
+    session_hours: int = 12
+    reset_minutes: int = 30
+    login_max_failures: int = 5
+    login_lock_minutes: int = 15
 
     @property
     def cors_origin_list(self) -> list[str]:

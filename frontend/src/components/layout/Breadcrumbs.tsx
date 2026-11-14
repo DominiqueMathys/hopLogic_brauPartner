@@ -36,6 +36,10 @@ function pageTrail(pathname: string): string[] {
   if (/^\/automatisierungen\/[^/]+\/protokoll$/.test(pathname)) {
     return ['Protokoll']
   }
+  if (pathname === '/benutzer/neu') return ['Neu']
+  if (pathname === '/benutzer/rollen') return ['Rollen']
+  if (pathname === '/benutzer/protokoll') return ['Audit-Protokoll']
+  if (/^\/benutzer\/[^/]+$/.test(pathname)) return ['Konto']
   return [
     ...detailTrail(pathname, '/vertriebspartner', { create: 'Neuer Partner', edit: 'Bearbeiten', detail: 'Partner' }),
     ...detailTrail(pathname, '/verkaufschancen', { create: 'Neue Verkaufschance', edit: 'Bearbeiten', detail: 'Verkaufschance' }),
@@ -77,7 +81,7 @@ export function Breadcrumbs() {
                 {current.label}
               </Link>
             ) : (
-              <span>{current?.label ?? 'Seite'}</span>
+              <span>{current?.label ?? (pathname === '/profil' ? 'Profil' : 'Seite')}</span>
             )}
           </li>
         )}

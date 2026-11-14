@@ -7,6 +7,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
+from support import AuthClient, authenticated_client, login_session
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -54,7 +55,8 @@ def api(db_session: Session) -> Iterator[TestClient]:
         yield db_session
 
     app.dependency_overrides[get_db] = override
-    with TestClient(app) as client:
+    with AuthClient(app) as client:
+        login_session(client, db_session)
         yield client
     app.dependency_overrides.pop(get_db, None)
 
@@ -439,7 +441,7 @@ def test_contact_persists_in_postgresql() -> None:
     contact_id: str | None = None
     partner_id: str | None = None
     try:
-        with TestClient(app) as client:
+        with authenticated_client() as client:
             partner_id = create_partner(client, suffix)
             response = client.post("/api/contacts", json=contact_body(suffix, partner_id, email=None))
             assert response.status_code == 201

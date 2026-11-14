@@ -39,6 +39,7 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
     account_owner: Mapped[str | None] = mapped_column(String(120))
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("benutzer.id", ondelete="SET NULL"))
     due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     priority: Mapped[str] = mapped_column(String(20), nullable=False, default="normal")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="offen")

@@ -120,8 +120,15 @@ export const navigation: NavItem[] = [
     id: 'reporting',
     label: 'Reporting',
     path: '/reporting',
-    summary: 'Auswertungen für Vertrieb und Service.',
-    phase: 'planned',
+    summary: 'Kennzahlen aus den gespeicherten CRM-Daten.',
+    phase: 'available',
+  },
+  {
+    id: 'users',
+    label: 'Benutzer',
+    path: '/benutzer',
+    summary: 'Konten, Rollen und Berechtigungen.',
+    phase: 'available',
   },
   {
     id: 'settings',
@@ -134,6 +141,30 @@ export const navigation: NavItem[] = [
 
 export function currentNavItem(pathname: string): NavItem | undefined {
   return navigation.find((item) => isNavActive(pathname, item.path))
+}
+
+export function navAllowed(item: NavItem, can: (permission: string) => boolean): boolean {
+  if (item.id === 'reporting') {
+    return ['overview', 'sales', 'partners', 'orders', 'service', 'marketing', 'work'].some((section) => can(`reports.${section}`))
+  }
+  if (item.id === 'users') return can('users.manage') || can('roles.read') || can('audit.read')
+  if (item.id === 'service') return can('tickets.read') || can('tickets.read_assigned')
+  const required: Partial<Record<NavItem['id'], string>> = {
+    partners: 'partners.read',
+    contacts: 'contacts.read',
+    opportunities: 'deals.read',
+    orders: 'orders.read',
+    products: 'products.read',
+    activities: 'activities.read',
+    tasks: 'tasks.read',
+    segments: 'segments.read',
+    campaigns: 'campaigns.read',
+    care: 'care.read',
+    automations: 'automations.read',
+    notices: 'notifications.read',
+  }
+  const permission = required[item.id]
+  return permission ? can(permission) : true
 }
 
 export function isNavActive(pathname: string, path: string): boolean {

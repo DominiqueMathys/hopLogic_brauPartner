@@ -57,6 +57,7 @@ class Contact(Base):
     phone: Mapped[str | None] = mapped_column(String(40))
     mobile: Mapped[str | None] = mapped_column(String(40))
     account_owner: Mapped[str | None] = mapped_column(String(120))
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("benutzer.id", ondelete="SET NULL"))
     preferred_language: Mapped[str] = mapped_column(String(8), nullable=False, default="de")
     preferred_channel: Mapped[str] = mapped_column(String(20), nullable=False, default="telefon")
     lifecycle_phase: Mapped[str] = mapped_column(String(20), nullable=False)

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
+import { AuthProvider, RequireAuth } from './auth.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { AppShell } from './components/layout/AppShell.tsx'
 import { ToastProvider } from './components/ui/ToastNotification.tsx'
@@ -37,6 +38,11 @@ import { TemplateDetailPage, TemplateFormPage, TemplateListPage } from './pages/
 import { CarePage } from './pages/care/CarePage.tsx'
 import { NotificationCenterPage, NotificationSettingsPage } from './pages/notifications/NotificationPages.tsx'
 import { SettingsPage } from './pages/SettingsPage.tsx'
+import { LoginPage } from './pages/auth/LoginPage.tsx'
+import { ProfilePage } from './pages/auth/ProfilePage.tsx'
+import { ResetPage } from './pages/auth/ResetPage.tsx'
+import { ReportingPage } from './pages/reporting/ReportingPage.tsx'
+import { AuditPage, RolesPage, UserCreatePage, UserDetailPage, UserListPage } from './pages/users/UserPages.tsx'
 
 export default function App() {
   const modules = navigation.filter((item) => item.phase === 'planned')
@@ -45,7 +51,11 @@ export default function App() {
     <ErrorBoundary>
       <ToastProvider>
         <BrowserRouter>
+          <AuthProvider>
           <Routes>
+            <Route path="/anmelden" element={<LoginPage />} />
+            <Route path="/passwort-zuruecksetzen" element={<ResetPage />} />
+            <Route element={<RequireAuth />}>
             <Route element={<AppShell />}>
               <Route index element={<DashboardPage />} />
               <Route path="vertriebspartner/neu" element={<PartnerCreatePage />} />
@@ -98,13 +108,22 @@ export default function App() {
               <Route path="automatisierungen" element={<AutomationListPage />} />
               <Route path="benachrichtigungen/einstellungen" element={<NotificationSettingsPage />} />
               <Route path="benachrichtigungen" element={<NotificationCenterPage />} />
+              <Route path="reporting" element={<ReportingPage />} />
+              <Route path="profil" element={<ProfilePage />} />
+              <Route path="benutzer/neu" element={<UserCreatePage />} />
+              <Route path="benutzer/rollen" element={<RolesPage />} />
+              <Route path="benutzer/protokoll" element={<AuditPage />} />
+              <Route path="benutzer/:userId" element={<UserDetailPage />} />
+              <Route path="benutzer" element={<UserListPage />} />
               {modules.map((item) => (
                 <Route key={item.id} path={item.path.slice(1)} element={<ModulePage item={item} />} />
               ))}
               <Route path="einstellungen" element={<SettingsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
+            </Route>
           </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </ToastProvider>
     </ErrorBoundary>

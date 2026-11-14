@@ -141,6 +141,17 @@ export function ReportingIcon(props: IconProps) {
   )
 }
 
+export function UsersIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <circle cx="9" cy="9" r="2.4" />
+      <circle cx="16" cy="10" r="2" />
+      <path d="M4.5 18.5c.5-2.4 2.2-3.6 4.5-3.6s4 1.2 4.5 3.6" />
+      <path d="M14 14.8c1.6.1 2.9.9 3.5 2.2" />
+    </IconFrame>
+  )
+}
+
 export function SettingsIcon(props: IconProps) {
   return (
     <IconFrame {...props}>
@@ -242,6 +253,7 @@ const navIcons = {
   notices: NoticesIcon,
   materials: MaterialsIcon,
   reporting: ReportingIcon,
+  users: UsersIcon,
   settings: SettingsIcon,
 } as const
 

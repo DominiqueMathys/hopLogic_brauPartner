@@ -9,13 +9,14 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import delete
+from support import AuthClient, authenticated_client, login_session
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, engine, get_db
 from app.main import app
 from app.models.contact import CompanyContact, Contact
-from app.models.engagement import CampaignAudienceMember, CampaignRecipient, MarketingCampaign
+from app.models.engagement import AutomationRule, CampaignAudienceMember, CampaignRecipient, MarketingCampaign
 from app.models.partner import Partner
 from app.services.automation import publish_event, run_due_automations
 
@@ -53,7 +54,8 @@ def api(db_session: Session):
         yield db_session
 
     app.dependency_overrides[get_db] = override
-    with TestClient(app) as client:
+    with AuthClient(app) as client:
+        login_session(client, db_session)
         yield client
     app.dependency_overrides.pop(get_db, None)
 
@@ -297,6 +299,9 @@ def test_care_rule_ignores_cancelled_orders(api: TestClient) -> None:
 
 
 def test_event_automation_dedupe_pause_and_failure(api: TestClient, db_session: Session, monkeypatch: pytest.MonkeyPatch) -> None:
+    for row in db_session.scalars(select(AutomationRule).where(AutomationRule.trigger_type == "deal_created", AutomationRule.status == "aktiv")).all():
+        row.status = "pausiert"
+    db_session.flush()
     suffix = uuid4().hex[:8]
     partner_id = create_partner(api, suffix)
     created = api.post(
@@ -461,7 +466,7 @@ def test_worker_process_and_persistence() -> None:
     assert "Ausführungen:" in stdout
 
     suffix = uuid4().hex[:8]
-    with TestClient(app) as client:
+    with authenticated_client() as client:
         partner_id = create_partner(client, suffix)
         contact_id = create_contact(client, suffix, partner_id)
         created = client.post("/api/campaigns", json=campaign_body(name=f"Persistenz {suffix}"))

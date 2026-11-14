@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router'
+import { useAuth } from '../../auth.tsx'
 import { NavIcon } from '../icons.tsx'
-import { navigation, type NavItem } from '../../navigation.ts'
+import { navAllowed, navigation, type NavItem } from '../../navigation.ts'
 import { cx } from '../../lib/cx.ts'
 
 type SidebarProps = {
@@ -10,6 +11,8 @@ type SidebarProps = {
 }
 
 export function Sidebar({ open, collapsed, onNavigate }: SidebarProps) {
+  const { can } = useAuth()
+  const items = navigation.filter((item) => navAllowed(item, can))
   return (
     <aside
       id="app-sidebar"
@@ -30,7 +33,7 @@ export function Sidebar({ open, collapsed, onNavigate }: SidebarProps) {
       </div>
       <nav aria-label="Hauptnavigation" className="flex-1 overflow-y-auto px-2 pb-4">
         <ul className="grid gap-1">
-          {navigation.map((item) => (
+          {items.map((item) => (
             <li key={item.id}>
               <SidebarLink item={item} collapsed={collapsed} onNavigate={onNavigate} />
             </li>

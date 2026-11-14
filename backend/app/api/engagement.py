@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.crm_support import check_page, clean_query, run_write
@@ -328,8 +328,19 @@ def get_executions(rule_id: UUID, db: Session = Depends(get_db)) -> list[Executi
     return list_executions(db, rule_id)
 
 
+def _notice_recipient(request: Request, requested: str | None) -> tuple[str, bool]:
+    actor = getattr(request.state, "actor", None)
+    cleaned = clean_query(requested, 120)
+    if actor is None:
+        raise HTTPException(status_code=401, detail="Anmeldung erforderlich.")
+    if cleaned and cleaned != actor.display_name and "users.manage" in actor.permissions:
+        return cleaned, False
+    return actor.display_name, True
+
+
 @notifications_router.get("", response_model=NotificationList)
 def get_notifications(
+    request: Request,
     empfaenger: str | None = None,
     notification_type: str | None = None,
     unread: bool = False,
@@ -338,45 +349,50 @@ def get_notifications(
     db: Session = Depends(get_db),
 ) -> NotificationList:
     check_page(page, page_size)
+    recipient, bound = _notice_recipient(request, empfaenger)
     if notification_type and notification_type not in NOTIFICATION_TYPES:
         notification_type = None
     return list_notifications(
         db,
-        recipient=clean_query(empfaenger, 120),
+        recipient=recipient,
         notification_type=notification_type,
         unread_only=unread,
         page=page,
         page_size=page_size,
+        bound=bound,
     )
 
 
 @notifications_router.get("/summary", response_model=NotificationSummary)
-def get_notification_summary(empfaenger: str | None = None, db: Session = Depends(get_db)) -> NotificationSummary:
-    return notification_summary(db, clean_query(empfaenger, 120))
+def get_notification_summary(request: Request, empfaenger: str | None = None, db: Session = Depends(get_db)) -> NotificationSummary:
+    recipient, bound = _notice_recipient(request, empfaenger)
+    return notification_summary(db, recipient, bound=bound)
 
 
 @notifications_router.get("/settings", response_model=PreferenceSettingsRead)
-def get_notification_settings(empfaenger: str | None = None, db: Session = Depends(get_db)) -> PreferenceSettingsRead:
-    label = clean_query(empfaenger, 120)
-    if not label:
-        raise HTTPException(status_code=422, detail="Bis Phase 08 braucht die Einstellung einen Anzeigenamen. Es gibt kein Benutzerkonto.")
+def get_notification_settings(request: Request, empfaenger: str | None = None, db: Session = Depends(get_db)) -> PreferenceSettingsRead:
+    label, _bound = _notice_recipient(request, empfaenger)
     return read_settings(db, label)
 
 
 @notifications_router.put("/settings", response_model=PreferenceSettingsRead)
-def put_notification_settings(payload: PreferenceSettingsWrite, db: Session = Depends(get_db)) -> PreferenceSettingsRead:
+def put_notification_settings(payload: PreferenceSettingsWrite, request: Request, db: Session = Depends(get_db)) -> PreferenceSettingsRead:
+    label, _bound = _notice_recipient(request, payload.recipient_label)
+    payload = payload.model_copy(update={"recipient_label": label})
     return run_write(db, lambda: save_settings(db, payload))
 
 
 @notifications_router.post("/read-all")
-def post_read_all(empfaenger: str = Query(min_length=1), db: Session = Depends(get_db)) -> dict[str, int]:
-    count = run_write(db, lambda: mark_all_read(db, clean_query(empfaenger, 120) or ""))
+def post_read_all(request: Request, empfaenger: str = Query(min_length=1), db: Session = Depends(get_db)) -> dict[str, int]:
+    label, _bound = _notice_recipient(request, empfaenger)
+    count = run_write(db, lambda: mark_all_read(db, label))
     return {"updated": count}
 
 
 @notifications_router.post("/{notification_id}/read", response_model=NotificationRead)
-def post_read(notification_id: UUID, empfaenger: str = Query(min_length=1), db: Session = Depends(get_db)) -> NotificationRead:
-    return run_write(db, lambda: mark_notification_read(db, notification_id, clean_query(empfaenger, 120) or ""))
+def post_read(notification_id: UUID, request: Request, empfaenger: str = Query(min_length=1), db: Session = Depends(get_db)) -> NotificationRead:
+    label, _bound = _notice_recipient(request, empfaenger)
+    return run_write(db, lambda: mark_notification_read(db, notification_id, label))
 
 
 @preferences_router.get("/contacts/{contact_id}/preferences", response_model=PreferenceRead)

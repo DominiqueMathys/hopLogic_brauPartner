@@ -8,6 +8,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
+from support import AuthClient, authenticated_client, login_session
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -63,7 +64,8 @@ def api(db_session: Session) -> Iterator[TestClient]:
         yield db_session
 
     app.dependency_overrides[get_db] = override
-    with TestClient(app) as client:
+    with AuthClient(app) as client:
+        login_session(client, db_session)
         yield client
     app.dependency_overrides.pop(get_db, None)
 
@@ -339,7 +341,7 @@ def test_service_persists_in_postgresql(tmp_path: Path) -> None:
     partner_id: str | None = None
     segment_id: str | None = None
     try:
-        with TestClient(app) as client:
+        with authenticated_client() as client:
             partner_id = create_partner(client, suffix)
             created = client.post("/api/tickets", json=ticket_body(partner_id, subject="Persistenzprüfung"))
             assert created.status_code == 201

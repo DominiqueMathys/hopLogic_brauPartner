@@ -6,6 +6,7 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     DateTime,
+    ForeignKey,
     Index,
     String,
     Text,
@@ -63,6 +64,7 @@ class Partner(Base):
     website: Mapped[str | None] = mapped_column(String(300))
     status: Mapped[str] = mapped_column(String(40), nullable=False)
     account_owner: Mapped[str | None] = mapped_column(String(120))
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("benutzer.id", ondelete="SET NULL"))
     acquisition_source: Mapped[str | None] = mapped_column(String(120))
     priority: Mapped[str] = mapped_column(String(20), nullable=False, default="normal")
     first_contact_on: Mapped[date | None] = mapped_column(Date)

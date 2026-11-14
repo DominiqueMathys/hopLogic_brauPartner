@@ -24,6 +24,7 @@ dist-ssr/
 *.log
 postgres-data/
 data/ticket-attachments/
+data/local-dev-access.txt
 
 # Betriebssystem und Editoren
 .DS_Store

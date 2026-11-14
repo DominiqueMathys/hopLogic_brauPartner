@@ -22,6 +22,7 @@ import {
 } from '../../domain/service.ts'
 import { labelOf, taskPriorityOptions, taskStatusOptions } from '../../domain/crm.ts'
 import { cx } from '../../lib/cx.ts'
+import { useAuth } from '../../auth.tsx'
 import { usePageTitle } from '../../usePageTitle.ts'
 
 const ACTOR_KEY = 'hoplogic-actor-name'
@@ -32,6 +33,7 @@ function storedActor(): string {
 
 export function TicketDetailPage() {
   const { ticketId = '' } = useParams()
+  const { user } = useAuth()
   const [ticket, setTicket] = useState<TicketDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(true)
@@ -65,6 +67,8 @@ export function TicketDetailPage() {
       active = false
     }
   }, [ticketId])
+
+  const actorName = actor || user?.display_name || ''
 
   function rememberActor(value: string) {
     setActor(value)
@@ -144,35 +148,35 @@ export function TicketDetailPage() {
 
       <Card className="grid gap-3 p-4">
         <h2 className="font-semibold">Bearbeitung</h2>
-        <Input label="Name für den Verlauf" hint="Freiwillige Anzeige. Es gibt keine Benutzeranmeldung." value={actor} onChange={(event) => rememberActor(event.target.value)} />
+        <Input label="Name für den Verlauf" hint="Vorschlag ist das angemeldete Konto. Der Name wird im Verlauf gespeichert." value={actorName} onChange={(event) => rememberActor(event.target.value)} />
         <div className="flex flex-wrap items-end gap-2">
           <div className="min-w-56 flex-1">
             <Input label="Zuweisen an" value={owner} onChange={(event) => setOwner(event.target.value)} />
           </div>
-          <Button disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'assign', { account_owner: owner || null, changed_by: actor || null }))}>
+          <Button disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'assign', { account_owner: owner || null, changed_by: actorName || null }))}>
             Ticket zuweisen
           </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           {ticketPriorityOptions.map((option) => (
-            <Button key={option.value} variant="secondary" disabled={busy || option.value === ticket.priority} onClick={() => void run(() => postTicket(ticket.id, 'priority', { priority: option.value, changed_by: actor || null }))}>
+            <Button key={option.value} variant="secondary" disabled={busy || option.value === ticket.priority} onClick={() => void run(() => postTicket(ticket.id, 'priority', { priority: option.value, changed_by: actorName || null }))}>
               Priorität {option.label}
             </Button>
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
           {ticket.allowed_statuses.map((status) => (
-            <Button key={status} variant="secondary" disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'status', { status, changed_by: actor || null }))}>
+            <Button key={status} variant="secondary" disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'status', { status, changed_by: actorName || null }))}>
               Status {choiceLabel(ticketStatusOptions, status)}
             </Button>
           ))}
           {ticket.can_reopen ? (
-            <Button disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'reopen', { changed_by: actor || null }))}>
+            <Button disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'reopen', { changed_by: actorName || null }))}>
               Wieder öffnen
             </Button>
           ) : null}
           {ticket.can_close ? (
-            <Button variant="danger" disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'close', { changed_by: actor || null }))}>
+            <Button variant="danger" disabled={busy} onClick={() => void run(() => postTicket(ticket.id, 'close', { changed_by: actorName || null }))}>
               Ticket schliessen
             </Button>
           ) : null}
@@ -182,7 +186,7 @@ export function TicketDetailPage() {
             className="grid gap-2 border border-line p-3"
             onSubmit={(event: FormEvent) => {
               event.preventDefault()
-              void run(() => postTicket(ticket.id, 'resolve', { code: resolution, note: resolutionNote || null, changed_by: actor || null }))
+              void run(() => postTicket(ticket.id, 'resolve', { code: resolution, note: resolutionNote || null, changed_by: actorName || null }))
             }}
           >
             <h3 className="text-sm font-semibold">Lösung dokumentieren</h3>
@@ -219,7 +223,7 @@ export function TicketDetailPage() {
           onSubmit={(event) => {
             event.preventDefault()
             void run(async () => {
-              const next = await postTicket(ticket.id, 'notes', { note, changed_by: actor || null })
+              const next = await postTicket(ticket.id, 'notes', { note, changed_by: actorName || null })
               setNote('')
               return next
             })
@@ -241,8 +245,8 @@ export function TicketDetailPage() {
                 title: taskTitle,
                 due_at: new Date(taskDue).toISOString(),
                 priority: 'hoch',
-                account_owner: actor || ticket.account_owner,
-                changed_by: actor || null,
+                account_owner: actorName || ticket.account_owner,
+                changed_by: actorName || null,
               })
               setTaskTitle('')
               setTaskDue('')

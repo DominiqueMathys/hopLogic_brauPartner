@@ -15,7 +15,7 @@ import { formatDateTime, type PartnerSummary } from '../domain/partners.ts'
 import { formatChf, type DealSummary, type OrderSummary } from '../domain/sales.ts'
 import type { EngagementSummary } from '../domain/engagement.ts'
 import type { Segment, TicketSummary } from '../domain/service.ts'
-import { actorName } from '../lib/actor.ts'
+import { useAuth } from '../auth.tsx'
 import { navigation, type NavItem } from '../navigation.ts'
 import { usePageTitle } from '../usePageTitle.ts'
 
@@ -304,20 +304,19 @@ function SegmentOverview() {
 }
 
 function EngagementSignals() {
+  const { user } = useAuth()
   const [summary, setSummary] = useState<EngagementSummary | null>(null)
   const [unread, setUnread] = useState<number | null>(null)
-  const [limited, setLimited] = useState(true)
   const [failed, setFailed] = useState(false)
+  const name = user?.display_name ?? ''
 
   useEffect(() => {
     let active = true
-    const name = actorName()
     void Promise.all([fetchEngagementSummary(), fetchNoticeSummary(name)])
       .then(([engagement, notices]) => {
         if (!active) return
         setSummary(engagement)
         setUnread(notices.unread)
-        setLimited(!name)
       })
       .catch(() => {
         if (active) setFailed(true)
@@ -325,7 +324,7 @@ function EngagementSignals() {
     return () => {
       active = false
     }
-  }, [])
+  }, [name])
 
   if (failed) {
     return <EmptyState compact title="Betreuung nicht verfügbar" description="Kampagnen und Automatisierungen konnten nicht gelesen werden." />
@@ -340,8 +339,8 @@ function EngagementSignals() {
       <Metric title="Überfällige Aufgaben" value={String(summary.overdue_tasks)} note="Offene Aufgaben mit Fälligkeit vor jetzt." to="/aufgaben?faellig=overdue" />
       <Metric
         title="Ungelesene Benachrichtigungen"
-        value={limited ? '—' : String(unread)}
-        note={limited ? 'Bis Phase 08 braucht es einen Anzeigenamen. Fremde Hinweise werden nicht gezählt.' : 'Gespeicherte ungelesene Hinweise für den Anzeigenamen dieser Sitzung.'}
+        value={String(unread)}
+        note="Ungelesene Hinweise für das angemeldete Konto."
         to="/benachrichtigungen"
       />
       <Metric title="Aktive Automatisierungen" value={String(summary.active_automations)} note="Regeln mit Status aktiv. Zeitregeln laufen auf dem Server." to="/automatisierungen" />

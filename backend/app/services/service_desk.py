@@ -1,8 +1,8 @@
 """Service tickets, append-only history, files and computed segments.
 
 Handling time starts at created_at and ends at resolved_at, or at closed_at when
-the ticket was closed without a documented resolution. There is no login, so the
-actor name is optional display text. File storage is not a public directory.
+the ticket was closed without a documented resolution. Assigned-only roles see
+tickets that match their account. File storage is not a public directory.
 """
 
 from __future__ import annotations
@@ -96,6 +96,20 @@ def _actor(value: str | None) -> str | None:
         return None
     cleaned = " ".join(value.split())
     return cleaned or None
+
+
+def _limit_tickets(ticket: ServiceTicket) -> None:
+    from fastapi import HTTPException
+
+    from app.access_context import ticket_owner_limit
+
+    limit = ticket_owner_limit()
+    if limit is None:
+        return
+    name, user_id = limit
+    if ticket.account_owner == name or ticket.owner_user_id == user_id:
+        return
+    raise HTTPException(status_code=403, detail="Keine Berechtigung für diesen Datensatz.")
 
 
 def require_ticket(db: Session, ticket_id: uuid.UUID) -> ServiceTicket:
@@ -443,6 +457,7 @@ def _ticket_read(row: ServiceTicket, company: str, contact: str | None) -> Ticke
 
 def read_ticket(db: Session, ticket_id: uuid.UUID) -> TicketDetail:
     ticket = require_ticket(db, ticket_id)
+    _limit_tickets(ticket)
     partners, contacts, orders = _names(db, [ticket])
     base = _ticket_read(ticket, partners.get(ticket.partner_id, ""), contacts.get(ticket.contact_id) if ticket.contact_id else None)
     product_rows = db.execute(
@@ -557,6 +572,12 @@ def query_tickets(
     elif scope == "overdue":
         filters.append(ServiceTicket.due_on < _today())
         filters.append(ServiceTicket.status.in_(OPEN_TICKET_STATUSES))
+    from app.access_context import ticket_owner_limit
+
+    limit = ticket_owner_limit()
+    if limit is not None:
+        name, user_id = limit
+        filters.append(or_(ServiceTicket.account_owner == name, ServiceTicket.owner_user_id == user_id))
     base = select(ServiceTicket).join(Partner, Partner.id == ServiceTicket.partner_id)
     if filters:
         base = base.where(*filters)
@@ -581,7 +602,13 @@ def query_tickets(
 
 
 def ticket_summary(db: Session) -> TicketSummary:
-    rows = db.scalars(select(ServiceTicket)).all()
+    from app.access_context import ticket_owner_limit
+
+    rows = list(db.scalars(select(ServiceTicket)).all())
+    limit = ticket_owner_limit()
+    if limit is not None:
+        name, user_id = limit
+        rows = [row for row in rows if row.account_owner == name or row.owner_user_id == user_id]
     by_category = {key: 0 for key in ("beschaedigte_lieferung", "fehlende_lieferung", "falsche_lieferung", "produktqualitaet", "rechnung", "anfrage", "technisch", "sonstiges")}
     by_priority = {key: 0 for key in ("niedrig", "normal", "hoch", "kritisch")}
     by_status = {key: 0 for key in ("neu", "offen", "in_bearbeitung", "warten_kunde", "warten_intern", "geloest", "geschlossen")}
@@ -641,6 +668,7 @@ def _upload_root() -> Path:
 
 
 def save_attachment(db: Session, ticket_id: uuid.UUID, original_name: str, payload: bytes) -> TicketAttachment:
+    _limit_tickets(require_ticket(db, ticket_id))
     ticket = require_ticket(db, ticket_id)
     if len(payload) == 0:
         raise CrmServiceError("Die Datei ist leer.", 422)
@@ -672,6 +700,7 @@ def save_attachment(db: Session, ticket_id: uuid.UUID, original_name: str, paylo
 
 
 def attachment_file(db: Session, ticket_id: uuid.UUID, attachment_id: uuid.UUID) -> tuple[TicketAttachment, Path]:
+    _limit_tickets(require_ticket(db, ticket_id))
     row = db.get(TicketAttachment, attachment_id)
     if row is None or row.ticket_id != ticket_id:
         raise CrmServiceError("Die Datei wurde nicht gefunden.", 404)
@@ -683,6 +712,7 @@ def attachment_file(db: Session, ticket_id: uuid.UUID, attachment_id: uuid.UUID)
 
 
 def delete_attachment(db: Session, ticket_id: uuid.UUID, attachment_id: uuid.UUID) -> None:
+    _limit_tickets(require_ticket(db, ticket_id))
     row, path = attachment_file(db, ticket_id, attachment_id)
     path.unlink(missing_ok=True)
     db.delete(row)

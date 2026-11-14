@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { errorMessage, fetchNoticeSummary, fetchNotices, markNoticeRead } from '../../api/engagement.ts'
-import { actorName, rememberActor } from '../../lib/actor.ts'
+import { useAuth } from '../../auth.tsx'
 import { BellIcon, MenuIcon, UserIcon } from '../icons.tsx'
 import { Button } from '../ui/Button.tsx'
 import { SearchField } from '../ui/SearchField.tsx'
 import { Modal } from '../ui/Modal.tsx'
 import { Breadcrumbs } from './Breadcrumbs.tsx'
-import { navigation } from '../../navigation.ts'
+import { navAllowed, navigation } from '../../navigation.ts'
 import type { Notice } from '../../domain/engagement.ts'
 
 type HeaderProps = {
@@ -18,16 +18,17 @@ type HeaderProps = {
 
 export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
   const navigate = useNavigate()
+  const { user, logout, can } = useAuth()
   const [query, setQuery] = useState('')
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [actor, setActor] = useState(() => actorName())
   const [unread, setUnread] = useState<number | null>(null)
-  const [limited, setLimited] = useState(true)
   const [notices, setNotices] = useState<Notice[]>([])
   const [noticeError, setNoticeError] = useState('')
+  const name = user?.display_name ?? ''
+  const visibleNav = navigation.filter((item) => navAllowed(item, can))
   const normalized = query.trim().toLocaleLowerCase('de-LI')
-  const results = navigation.filter((item) => item.label.toLocaleLowerCase('de-LI').includes(normalized))
+  const results = visibleNav.filter((item) => item.label.toLocaleLowerCase('de-LI').includes(normalized))
 
   function choose(path: string) {
     setQuery('')
@@ -35,14 +36,12 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
   }
 
   useEffect(() => {
+    if (!name) return
     let active = true
     function load() {
-      const name = actorName()
       void fetchNoticeSummary(name)
         .then((summary) => {
-          if (!active) return
-          setUnread(summary.unread)
-          setLimited(!name)
+          if (active) setUnread(summary.unread)
         })
         .catch(() => {
           if (active) setUnread(null)
@@ -54,18 +53,17 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
       active = false
       window.clearInterval(timer)
     }
-  }, [actor])
+  }, [name])
 
   useEffect(() => {
-    if (!notificationsOpen) return
+    if (!notificationsOpen || !name) return
     let active = true
-    void fetchNotices({ recipient: actor, unread: false })
+    void fetchNotices({ recipient: name, unread: false })
       .then((result) => {
         if (!active) return
         setNotices(result.items.slice(0, 8))
         setUnread(result.unread)
-        setLimited(!actor.trim())
-        setNoticeError(result.notice)
+        setNoticeError('')
       })
       .catch((caught: unknown) => {
         if (active) setNoticeError(errorMessage(caught))
@@ -73,7 +71,7 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
     return () => {
       active = false
     }
-  }, [notificationsOpen, actor])
+  }, [notificationsOpen, name])
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-cream">
@@ -105,10 +103,8 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
             onClick={() => setNotificationsOpen(true)}
           >
             <BellIcon />
-            <span className="sr-only">
-              Benachrichtigungen{limited || unread === null ? '' : `, ${unread} ungelesen`}
-            </span>
-            {!limited && unread ? (
+            <span className="sr-only">Benachrichtigungen{unread ? `, ${unread} ungelesen` : ''}</span>
+            {unread ? (
               <span className="absolute top-1 right-1 min-w-5 bg-petrol px-1 text-center text-[10px] leading-4 font-semibold text-cream">
                 {unread > 99 ? '99+' : unread}
               </span>
@@ -116,36 +112,21 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
           </button>
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center border border-line bg-card"
+            className="inline-flex h-11 items-center gap-2 border border-line bg-card px-3"
             aria-haspopup="dialog"
             onClick={() => setProfileOpen(true)}
           >
             <UserIcon />
+            <span className="max-w-40 truncate text-sm">{user?.display_name}</span>
             <span className="sr-only">Benutzerprofil</span>
           </button>
         </div>
       </div>
       <Modal open={notificationsOpen} title="Benachrichtigungen" onClose={() => setNotificationsOpen(false)}>
-        <p className="text-sm leading-6">
-          Bis Phase 08 gibt es kein Benutzerkonto. Angezeigt werden nur gespeicherte Hinweise für den Anzeigenamen.
-        </p>
-        <label className="mt-3 grid gap-1 text-sm font-semibold" htmlFor="actor-name">
-          Anzeigename
-          <input
-            id="actor-name"
-            className="border border-line bg-card px-3 py-2 font-normal"
-            value={actor}
-            onChange={(event) => {
-              setActor(event.target.value)
-              rememberActor(event.target.value)
-            }}
-          />
-        </label>
+        <p className="text-sm leading-6">Hinweise für {name}. Meldungen anderer Konten werden nicht angezeigt.</p>
         {noticeError ? <p className="mt-3 text-sm leading-6">{noticeError}</p> : null}
-        {limited ? (
-          <p className="mt-3 text-sm">Ohne Anzeigename bleibt die Liste leer. Es werden keine fremden Hinweise gezeigt.</p>
-        ) : notices.length === 0 ? (
-          <p className="mt-3 text-sm">Keine gespeicherten Hinweise für diesen Namen.</p>
+        {notices.length === 0 ? (
+          <p className="mt-3 text-sm">Keine gespeicherten Hinweise für dieses Konto.</p>
         ) : (
           <ul className="mt-3 grid gap-2">
             {notices.map((item) => (
@@ -161,8 +142,8 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
                     <Button
                       variant="secondary"
                       onClick={() => {
-                        void markNoticeRead(item.id, actor)
-                          .then(() => fetchNotices({ recipient: actor }))
+                        void markNoticeRead(item.id, name)
+                          .then(() => fetchNotices({ recipient: name }))
                           .then((result) => {
                             setNotices(result.items.slice(0, 8))
                             setUnread(result.unread)
@@ -182,11 +163,33 @@ export function Header({ menuExpanded, menuLabel, onToggleMenu }: HeaderProps) {
           Benachrichtigungscenter
         </Link>
       </Modal>
-      <Modal open={profileOpen} title="Benutzerprofil" onClose={() => setProfileOpen(false)}>
-        <p>
-          Es ist kein Benutzerkonto angemeldet. Name, Rolle und Abmeldung folgen mit der Anmeldung in einer
-          späteren Phase.
+      <Modal open={profileOpen} title="Angemeldet" onClose={() => setProfileOpen(false)}>
+        <p className="text-sm leading-6">
+          {user?.display_name}
+          <span className="mt-1 block text-muted">{user?.role_name}</span>
+          <span className="mt-1 block">{user?.email}</span>
         </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link to="/profil" className="text-sm font-semibold text-petrol" onClick={() => setProfileOpen(false)}>
+            Profil und Passwort
+          </Link>
+          {can('users.manage') ? (
+            <Link to="/benutzer" className="text-sm font-semibold text-petrol" onClick={() => setProfileOpen(false)}>
+              Benutzerverwaltung
+            </Link>
+          ) : null}
+          <Button
+            variant="secondary"
+            onClick={() => {
+              void logout().then(() => {
+                setProfileOpen(false)
+                void navigate('/anmelden')
+              })
+            }}
+          >
+            Abmelden
+          </Button>
+        </div>
       </Modal>
     </header>
   )
@@ -206,7 +209,7 @@ function SearchBox({
   return (
     <SearchField
       label="Suche in der Navigation"
-      hint="Durchsucht nur die Menüpunkte. CRM-Datensätze sind noch nicht angebunden."
+      hint="Durchsucht die freigegebenen Menüpunkte."
       placeholder="Menüpunkt suchen"
       value={query}
       onChange={onChange}

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { fetchHealth, type HealthResult } from '../api/health.ts'
 import { Button } from '../components/ui/Button.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { ErrorState } from '../components/ui/ErrorState.tsx'
 import { LoadingState } from '../components/ui/LoadingState.tsx'
 import { Select } from '../components/ui/Select.tsx'
@@ -144,10 +143,20 @@ export function SettingsPage() {
               label: 'Weitere Einstellungen',
               content: (
                 <Card>
-                  <EmptyState
-                    title="Modul in Entwicklung"
-                    description="Darstellung, Benutzer und Benachrichtigungen werden später an dieser Stelle konfiguriert."
-                  />
+                  <div className="grid gap-3 text-sm leading-6">
+                    <p>
+                      Die Anmeldung verwendet ein HTTP-only-Sitzungscookie. Lokal über HTTP bleibt das Secure-Flag aus,
+                      sonst sendet der Browser das Cookie nicht. Hinter HTTPS muss SESSION_COOKIE_SECURE=true gesetzt werden.
+                    </p>
+                    <p>
+                      Das erste Administratorkonto entsteht mit python -m app.bootstrap_admin. Das Passwort steht nicht im
+                      Repository. Demo-Konten sind fiktiv und nicht für eine produktive Bereitstellung.
+                    </p>
+                    <p>
+                      Diese Phase richtet Zugriff und Berichte ein. Sie ist keine abschliessende Produktionssicherheitsprüfung.
+                      Offene Konfiguration und der Betrieb werden später geprüft.
+                    </p>
+                  </div>
                 </Card>
               ),
             },

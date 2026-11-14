@@ -12,18 +12,17 @@ import { Badge } from '../../components/ui/Badge.tsx'
 import { Button } from '../../components/ui/Button.tsx'
 import { Card } from '../../components/ui/Card.tsx'
 import { EmptyState } from '../../components/ui/EmptyState.tsx'
-import { Input } from '../../components/ui/Input.tsx'
 import { LoadingState } from '../../components/ui/LoadingState.tsx'
 import { Select } from '../../components/ui/Select.tsx'
 import { labelOf, notificationTypeOptions, type NoticeList, type NoticeSettings } from '../../domain/engagement.ts'
 import { formatDateTime } from '../../domain/partners.ts'
-import { actorName, rememberActor } from '../../lib/actor.ts'
+import { useAuth } from '../../auth.tsx'
 import { usePageTitle } from '../../usePageTitle.ts'
 
 export function NotificationCenterPage() {
   usePageTitle('Benachrichtigungen')
-  const [name, setName] = useState(() => actorName())
-  const [draft, setDraft] = useState(() => actorName())
+  const { user } = useAuth()
+  const name = user?.display_name ?? ''
   const [type, setType] = useState('')
   const [unreadOnly, setUnreadOnly] = useState(false)
   const [data, setData] = useState<NoticeList | null>(null)
@@ -56,27 +55,13 @@ export function NotificationCenterPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Benachrichtigungen</h1>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Bis Phase 08 gibt es kein Benutzerkonto. Hinweise erscheinen nur für den gewählten Anzeigenamen und nicht als
-            persönliche Daten anderer Personen.
+            Hinweise für {name || 'das angemeldete Konto'}. Meldungen anderer Konten werden nicht angezeigt.
           </p>
         </div>
         <Link to="/benachrichtigungen/einstellungen" className="text-sm font-semibold text-petrol">
           Einstellungen
         </Link>
       </header>
-      <Card className="grid gap-3 p-4 md:grid-cols-[1fr_auto]">
-        <Input label="Anzeigename" value={draft} onChange={(event) => setDraft(event.target.value)} hint="Zum Beispiel Sandra Lutz" />
-        <div className="self-end">
-          <Button
-            onClick={() => {
-              rememberActor(draft)
-              setName(draft.trim())
-            }}
-          >
-            Anzeigen
-          </Button>
-        </div>
-      </Card>
       <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
         <Select
           label="Typ"
@@ -165,7 +150,8 @@ export function NotificationCenterPage() {
 
 export function NotificationSettingsPage() {
   usePageTitle('Benachrichtigungseinstellungen')
-  const [name, setName] = useState(() => actorName())
+  const { user } = useAuth()
+  const name = user?.display_name ?? ''
   const [settings, setSettings] = useState<NoticeSettings | null>(null)
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
@@ -192,19 +178,7 @@ export function NotificationSettingsPage() {
   return (
     <div className="mx-auto grid max-w-xl gap-4">
       <h1 className="text-3xl font-semibold tracking-tight">Benachrichtigungseinstellungen</h1>
-      <p className="text-sm leading-6 text-muted">
-        Die Schalter gelten für den Anzeigenamen dieser Sitzung. Sie ersetzen keine Benutzerverwaltung und gelten bis
-        Phase 08 als eingeschränkt.
-      </p>
-      <Input
-        label="Anzeigename"
-        value={name}
-        onChange={(event) => {
-          setName(event.target.value)
-          rememberActor(event.target.value)
-          setSettings(null)
-        }}
-      />
+      <p className="text-sm leading-6 text-muted">Die Schalter gelten für {name || 'das angemeldete Konto'}.</p>
       {error ? <p className="text-sm text-critical">{error}</p> : null}
       {!name ? <EmptyState title="Anzeigename fehlt" description="Ohne Namen können keine persönlichen Einstellungen geladen werden." /> : null}
       {name && !settings && !error ? <LoadingState label="Einstellungen werden geladen" /> : null}

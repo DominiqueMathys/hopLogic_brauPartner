@@ -49,6 +49,7 @@ class Deal(Base):
     partner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("vertriebspartner.id", ondelete="RESTRICT"), nullable=False)
     contact_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("kontakte.id", ondelete="RESTRICT"))
     account_owner: Mapped[str | None] = mapped_column(String(120))
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("benutzer.id", ondelete="SET NULL"))
     estimated_value: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     expected_close_on: Mapped[date | None] = mapped_column(Date)
     stage: Mapped[str] = mapped_column(String(30), nullable=False)
