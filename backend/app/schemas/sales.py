@@ -326,6 +326,9 @@ class ProductRead(BaseModel):
     sales_unit: str | None
     list_price: Decimal
     vat_rate: Decimal
+    currency: str = "CHF"
+    erp_source: str | None = None
+    erp_synced_at: datetime | None = None
     is_active: bool
     is_demo: bool
     created_at: datetime
@@ -440,6 +443,16 @@ class OrderRead(BaseModel):
     status: str
     notes: str | None
     erp_reference: str | None
+    transfer_status: str = "nicht_uebertragen"
+    erp_status: str | None = None
+    erp_status_at: datetime | None = None
+    erp_status_source: str | None = None
+    delivery_on: date | None = None
+    delivery_note: str = ""
+    delivery_status: str = ""
+    invoice_number: str = ""
+    invoice_on: date | None = None
+    invoice_status: str = ""
     subtotal: Decimal
     discount_total: Decimal
     net_total: Decimal

@@ -1,0 +1,1 @@
+"""ERP-independent integration package."""

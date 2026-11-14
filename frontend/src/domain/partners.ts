@@ -2,6 +2,9 @@ export type Partner = {
   id: string
   company_name: string
   erp_customer_number: string | null
+  erp_customer_status?: string | null
+  erp_source?: string | null
+  erp_synced_at?: string | null
   partner_type: string
   industry: string | null
   street: string | null

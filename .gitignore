@@ -25,6 +25,7 @@ dist-ssr/
 postgres-data/
 data/ticket-attachments/
 data/local-dev-access.txt
+data/mock-erp.sqlite
 
 # Betriebssystem und Editoren
 .DS_Store

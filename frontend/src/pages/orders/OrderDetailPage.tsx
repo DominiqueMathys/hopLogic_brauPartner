@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { advanceMockStatus, prepareOrderTransfer, refreshOrderErpStatus, transferOrder } from '../../api/integration.ts'
 import { ApiError, changeOrderStatus, fetchOrder } from '../../api/sales.ts'
+import { useAuth } from '../../auth.tsx'
 import { BoundaryNotice } from '../../components/sales/BoundaryNotice.tsx'
 import { OrderComplaints } from '../../components/service/RelatedService.tsx'
 import { Badge } from '../../components/ui/Badge.tsx'
@@ -21,6 +23,8 @@ export function OrderDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(true)
   const [nextStatus, setNextStatus] = useState<string | null>(null)
+  const [transferError, setTransferError] = useState('')
+  const { can } = useAuth()
 
   usePageTitle(order ? `Bestellung ${order.order_number}` : 'Bestellung')
 
@@ -95,6 +99,30 @@ export function OrderDetailPage() {
             <dd>{order.erp_reference ?? 'Noch keine ERP-Referenz'}</dd>
           </div>
           <div>
+            <dt className="text-muted">Übertragungsstatus</dt>
+            <dd>{order.transfer_status ?? 'nicht_uebertragen'}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Externer Bestellstatus</dt>
+            <dd>{order.erp_status ?? 'Keine externe Statusmeldung'}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Statusquelle</dt>
+            <dd>{order.erp_status_source === 'mock' ? 'Mock-ERP, Testdaten' : 'Manuelle CRM-Eingabe'}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Letzte Statusaktualisierung</dt>
+            <dd>{order.erp_status_at ? formatDateTime(order.erp_status_at) : 'Keine'}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Lieferung laut Connector</dt>
+            <dd>{order.delivery_status ? `${order.delivery_status} ${order.delivery_note ?? ''}` : 'Keine externe Lieferangabe'}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Externe Rechnungsangabe</dt>
+            <dd>{order.invoice_number ? `${order.invoice_number}. ${order.invoice_status ?? ''}` : 'Keine. Das CRM erzeugt keine Rechnung.'}</dd>
+          </div>
+          <div>
             <dt className="text-muted">Erstellt</dt>
             <dd>{formatDateTime(order.created_at)}</dd>
           </div>
@@ -155,6 +183,21 @@ export function OrderDetailPage() {
       ) : (
         <p className="text-sm text-muted">Für diesen Status ist kein weiterer Wechsel vorgesehen.</p>
       )}
+      {can('integration.sync') ? (
+        <Card className="grid gap-3 p-4">
+          <h2 className="font-semibold">Übertragung an den Connector</h2>
+          <p className="text-sm leading-6 text-muted">
+            Der CRM-Status bleibt eine eigene Angabe. Eine erfolgreiche Mock-Übertragung bedeutet weder Lieferung noch Fakturierung.
+          </p>
+          {transferError ? <p className="text-sm text-critical">{transferError}</p> : null}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => void prepareOrderTransfer(order.id).then(() => fetchOrder(order.id).then(setOrder)).catch((caught: unknown) => setTransferError(caught instanceof ApiError ? caught.message : 'Freigabe fehlgeschlagen.'))}>Zur Übertragung freigeben</Button>
+            <Button onClick={() => void transferOrder(order.id).then(() => fetchOrder(order.id).then(setOrder)).catch((caught: unknown) => setTransferError(caught instanceof ApiError ? caught.message : 'Übertragung fehlgeschlagen.'))}>An das Mock-ERP übertragen</Button>
+            <Button variant="secondary" onClick={() => void advanceMockStatus(order.id).then(setOrder).catch((caught: unknown) => setTransferError(caught instanceof ApiError ? caught.message : 'Der Mock-Status konnte nicht geändert werden.'))}>Simulierten Status weiterschalten</Button>
+            <Button variant="secondary" onClick={() => void refreshOrderErpStatus(order.id).then(setOrder).catch((caught: unknown) => setTransferError(caught instanceof ApiError ? caught.message : 'Der Status konnte nicht abgerufen werden.'))}>Externen Status abrufen</Button>
+          </div>
+        </Card>
+      ) : null}
       <Card className="p-4">
         <OrderComplaints orderId={order.id} />
       </Card>

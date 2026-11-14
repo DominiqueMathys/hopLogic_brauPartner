@@ -200,6 +200,9 @@ function Overview({ partner }: { partner: Partner }) {
         <dl className="mt-3 grid gap-4 sm:grid-cols-2">
           <Field label="Unternehmensname">{partner.company_name}</Field>
           <Field label="ERP-Kundennummer">{partner.erp_customer_number ?? 'Keine Angabe'}</Field>
+          <Field label="ERP-Kundenstatus">{partner.erp_customer_status ?? 'Keine Angabe'}</Field>
+          <Field label="Synchronisationsquelle">{partner.erp_source === 'mock' ? 'Mock-ERP, Testdaten' : partner.erp_source ?? 'Keine externe Quelle'}</Field>
+          <Field label="Letzte ERP-Aktualisierung">{partner.erp_synced_at ? formatDateTime(partner.erp_synced_at) : 'Keine'}</Field>
           <Field label="Partnertyp">{choiceLabel(partnerTypeOptions, partner.partner_type)}</Field>
           <Field label="Branche">{partner.industry ?? 'Keine Angabe'}</Field>
           <Field label="Strasse und Hausnummer">{partner.street ?? 'Keine Angabe'}</Field>

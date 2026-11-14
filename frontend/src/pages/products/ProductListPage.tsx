@@ -13,7 +13,7 @@ import { Input } from '../../components/ui/Input.tsx'
 import { LoadingState } from '../../components/ui/LoadingState.tsx'
 import { Select } from '../../components/ui/Select.tsx'
 import { containerOptions, formatChf, productCategoryOptions, type Product, type ProductList } from '../../domain/sales.ts'
-import { choiceLabel } from '../../domain/partners.ts'
+import { choiceLabel, formatDateTime } from '../../domain/partners.ts'
 import { cx } from '../../lib/cx.ts'
 import { usePageTitle } from '../../usePageTitle.ts'
 
@@ -73,6 +73,8 @@ export function ProductListPage() {
       ),
     },
     { id: 'sku', header: 'Artikelnummer', cell: (row) => row.sku },
+    { id: 'erp', header: 'ERP-Quelle', cell: (row) => row.erp_source === 'mock' ? 'Mock-ERP, Testdaten' : 'CRM' },
+    { id: 'synced', header: 'Letzte Synchronisation', cell: (row) => row.erp_synced_at ? formatDateTime(row.erp_synced_at) : 'Keine' },
     { id: 'category', header: 'Kategorie', cell: (row) => choiceLabel(productCategoryOptions, row.category) },
     { id: 'container', header: 'Gebinde', cell: (row) => `${choiceLabel(containerOptions, row.container_type)} ${row.container_size ?? ''}`.trim() },
     { id: 'price', header: 'Richtpreis', cell: (row) => formatChf(row.list_price) },

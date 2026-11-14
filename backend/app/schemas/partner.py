@@ -238,6 +238,9 @@ class PartnerRead(BaseModel):
     id: UUID
     company_name: str
     erp_customer_number: str | None
+    erp_customer_status: str | None = None
+    erp_source: str | None = None
+    erp_synced_at: datetime | None = None
     partner_type: str
     industry: str | None
     street: str | None

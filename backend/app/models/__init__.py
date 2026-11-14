@@ -7,6 +7,14 @@ from app.database import Base
 from app.models.activity import Activity
 from app.models.identity import AuditLog, PasswordReset, Permission, Role, RolePermission, User, UserSession
 from app.models.contact import CompanyContact, Contact
+from app.models.integration import (
+    ErpConflict,
+    ErpConnection,
+    ErpExternalReference,
+    ErpOrderTransfer,
+    ErpSyncJob,
+    ErpSyncRecord,
+)
 from app.models.engagement import (
     AutomationExecution,
     AutomationRule,
@@ -53,6 +61,12 @@ __all__ = [
     "CompanyContact",
     "Contact",
     "CustomerSegment",
+    "ErpConflict",
+    "ErpConnection",
+    "ErpExternalReference",
+    "ErpOrderTransfer",
+    "ErpSyncJob",
+    "ErpSyncRecord",
     "Deal",
     "DealStageHistory",
     "MarketingCampaign",

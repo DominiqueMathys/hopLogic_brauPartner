@@ -20,6 +20,7 @@ from app.api.engagement import (
 )
 from app.api.health import router as health_router
 from app.api.identity import audit_router, auth_router, roles_router, users_router
+from app.api.integration import router as integration_router
 from app.api.reports import router as reports_router
 from app.api.partners import router as partners_router
 from app.api.sales import deals_router, orders_router, products_router
@@ -77,6 +78,7 @@ app.include_router(users_router, prefix="/api")
 app.include_router(roles_router, prefix="/api")
 app.include_router(audit_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
+app.include_router(integration_router, prefix="/api")
 app.include_router(partners_router, prefix="/api")
 app.include_router(contacts_router, prefix="/api")
 app.include_router(activities_router, prefix="/api")

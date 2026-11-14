@@ -227,6 +227,15 @@ export function AutomationsIcon(props: IconProps) {
   )
 }
 
+export function IntegrationIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M8 7h8M8 12h8M8 17h5" />
+      <path d="M4 7h.01M4 12h.01M4 17h.01" />
+    </IconFrame>
+  )
+}
+
 export function NoticesIcon(props: IconProps) {
   return (
     <IconFrame {...props}>
@@ -253,6 +262,7 @@ const navIcons = {
   notices: NoticesIcon,
   materials: MaterialsIcon,
   reporting: ReportingIcon,
+  integration: IntegrationIcon,
   users: UsersIcon,
   settings: SettingsIcon,
 } as const

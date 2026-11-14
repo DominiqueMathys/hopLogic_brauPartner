@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     reset_minutes: int = 30
     login_max_failures: int = 5
     login_lock_minutes: int = 15
+    mock_erp_path: str = "data/mock-erp.sqlite"
+    erp_timeout_seconds: int = 10
+    erp_max_attempts: int = 3
+    erp_base_url: str = ""
+    erp_client_id: str = ""
+    erp_client_secret: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -135,6 +135,9 @@ export type Product = {
   sales_unit: string | null
   list_price: string
   vat_rate: string
+  currency?: string
+  erp_source?: string | null
+  erp_synced_at?: string | null
   is_active: boolean
   is_demo: boolean
   created_at: string
@@ -185,6 +188,16 @@ export type Order = {
   status: string
   notes: string | null
   erp_reference: string | null
+  transfer_status?: string
+  erp_status?: string | null
+  erp_status_at?: string | null
+  erp_status_source?: string | null
+  delivery_on?: string | null
+  delivery_note?: string
+  delivery_status?: string
+  invoice_number?: string
+  invoice_on?: string | null
+  invoice_status?: string
   subtotal: string
   discount_total: string
   net_total: string

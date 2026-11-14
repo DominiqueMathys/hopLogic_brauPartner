@@ -42,6 +42,7 @@ import { LoginPage } from './pages/auth/LoginPage.tsx'
 import { ProfilePage } from './pages/auth/ProfilePage.tsx'
 import { ResetPage } from './pages/auth/ResetPage.tsx'
 import { ReportingPage } from './pages/reporting/ReportingPage.tsx'
+import { IntegrationConflictsPage, IntegrationJobPage, IntegrationJobsPage, IntegrationOverviewPage, IntegrationPreviewPage } from './pages/integration/IntegrationPages.tsx'
 import { AuditPage, RolesPage, UserCreatePage, UserDetailPage, UserListPage } from './pages/users/UserPages.tsx'
 
 export default function App() {
@@ -109,6 +110,11 @@ export default function App() {
               <Route path="benachrichtigungen/einstellungen" element={<NotificationSettingsPage />} />
               <Route path="benachrichtigungen" element={<NotificationCenterPage />} />
               <Route path="reporting" element={<ReportingPage />} />
+              <Route path="integration/vorschau" element={<IntegrationPreviewPage />} />
+              <Route path="integration/laeufe/:jobId" element={<IntegrationJobPage />} />
+              <Route path="integration/laeufe" element={<IntegrationJobsPage />} />
+              <Route path="integration/konflikte" element={<IntegrationConflictsPage />} />
+              <Route path="integration" element={<IntegrationOverviewPage />} />
               <Route path="profil" element={<ProfilePage />} />
               <Route path="benutzer/neu" element={<UserCreatePage />} />
               <Route path="benutzer/rollen" element={<RolesPage />} />

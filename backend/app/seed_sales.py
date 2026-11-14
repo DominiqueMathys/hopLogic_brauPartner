@@ -142,7 +142,7 @@ def _order_payload(partner_id, contact_id, deal_id, products: dict[str, Product]
         ordered_on=date(2026, 11, 12),
         requested_delivery_on=date(2026, 11, 20),
         notes=(
-            "Fiktive Demo-Bestellung. Sie wird nicht ins ERP übertragen, erzeugt keine Rechnung "
+            "Fiktive Demo-Bestellung. Eine Übertragung geht nur an das Mock-ERP, erzeugt keine Rechnung "
             "und prüft keinen Lagerbestand."
         ),
         items=[

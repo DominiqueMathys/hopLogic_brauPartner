@@ -43,7 +43,7 @@ export const navigation: NavItem[] = [
     id: 'orders',
     label: 'Bestellungen',
     path: '/bestellungen',
-    summary: 'Dokumentierte CRM-Bestellungen ohne ERP-Übertragung.',
+    summary: 'Dokumentierte CRM-Bestellungen. Eine Übertragung geht nur an den konfigurierten Connector.',
     phase: 'available',
   },
   {
@@ -124,6 +124,13 @@ export const navigation: NavItem[] = [
     phase: 'available',
   },
   {
+    id: 'integration',
+    label: 'ERP-Integration',
+    path: '/integration',
+    summary: 'Mock-ERP und spätere Connector-Schnittstelle. Keine echte ERP-Verbindung.',
+    phase: 'available',
+  },
+  {
     id: 'users',
     label: 'Benutzer',
     path: '/benutzer',
@@ -148,6 +155,7 @@ export function navAllowed(item: NavItem, can: (permission: string) => boolean):
     return ['overview', 'sales', 'partners', 'orders', 'service', 'marketing', 'work'].some((section) => can(`reports.${section}`))
   }
   if (item.id === 'users') return can('users.manage') || can('roles.read') || can('audit.read')
+  if (item.id === 'integration') return can('integration.read')
   if (item.id === 'service') return can('tickets.read') || can('tickets.read_assigned')
   const required: Partial<Record<NavItem['id'], string>> = {
     partners: 'partners.read',

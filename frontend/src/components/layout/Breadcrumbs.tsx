@@ -37,6 +37,10 @@ function pageTrail(pathname: string): string[] {
     return ['Protokoll']
   }
   if (pathname === '/benutzer/neu') return ['Neu']
+  if (pathname === '/integration/vorschau') return ['Vorschau']
+  if (pathname === '/integration/laeufe') return ['Synchronisationen']
+  if (pathname === '/integration/konflikte') return ['Konflikte']
+  if (/^\/integration\/laeufe\/[^/]+$/.test(pathname)) return ['Synchronisationen', 'Detail']
   if (pathname === '/benutzer/rollen') return ['Rollen']
   if (pathname === '/benutzer/protokoll') return ['Audit-Protokoll']
   if (/^\/benutzer\/[^/]+$/.test(pathname)) return ['Konto']

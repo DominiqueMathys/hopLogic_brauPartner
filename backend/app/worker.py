@@ -16,6 +16,9 @@ def run_once() -> int:
     session = SessionLocal()
     try:
         attempts = run_due_automations(session)
+        from app.services.integration import run_due_integrations
+
+        attempts += run_due_integrations(session)
         session.commit()
         return attempts
     except Exception:

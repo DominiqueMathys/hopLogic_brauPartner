@@ -58,6 +58,10 @@ PERMISSIONS: tuple[tuple[str, str, str, str], ...] = (
     ("roles.manage", "rollen", "verwalten", "Rollenberechtigungen ändern"),
     ("audit.read", "protokoll", "lesen", "Audit-Protokoll lesen"),
     ("settings.read", "einstellungen", "lesen", "Systemeinstellungen sehen"),
+    ("integration.read", "integration", "lesen", "Integrationsstatus und Protokolle lesen"),
+    ("integration.sync", "integration", "synchronisieren", "Synchronisation und Bestellübertragung starten"),
+    ("integration.configure", "integration", "konfigurieren", "ERP-Modus und Intervalle konfigurieren"),
+    ("integration.conflicts", "integration", "konflikte", "Synchronisationskonflikte prüfen"),
 )
 
 PERMISSION_CODES = tuple(item[0] for item in PERMISSIONS)
@@ -224,6 +228,14 @@ def permission_needed(method: str, path: str) -> str | tuple[str, ...]:
         return "user"
     if path.startswith("/api/reports"):
         return tuple(code for code in PERMISSION_CODES if code.startswith("reports.") and code != "reports.export")
+    if path.startswith("/api/integration"):
+        if method == "GET":
+            return ("integration.read",)
+        if path.endswith("/mode") or path.endswith("/intervals"):
+            return ("integration.configure",)
+        if path.endswith("/review"):
+            return ("integration.conflicts",)
+        return ("integration.sync",)
     parts = [part for part in path.split("/") if part]
     if len(parts) < 2 or parts[0] != "api":
         return "deny"
