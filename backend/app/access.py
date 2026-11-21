@@ -62,6 +62,16 @@ PERMISSIONS: tuple[tuple[str, str, str, str], ...] = (
     ("integration.sync", "integration", "synchronisieren", "Synchronisation und Bestellübertragung starten"),
     ("integration.configure", "integration", "konfigurieren", "ERP-Modus und Intervalle konfigurieren"),
     ("integration.conflicts", "integration", "konflikte", "Synchronisationskonflikte prüfen"),
+    ("festivals.read", "feste", "lesen", "Feste, Anfragen, Kalender und Offerten lesen"),
+    ("festivals.write", "feste", "schreiben", "Festanfragen, Offerten und Einsätze bearbeiten"),
+    ("festivals.confirm", "feste", "freigeben", "Offerten annehmen und Festaufträge bestätigen"),
+    ("festivals.archive", "feste", "archivieren", "Feste archivieren und wiederherstellen"),
+    ("materials.read", "festmaterial", "lesen", "Festmaterial und Verfügbarkeit lesen"),
+    ("materials.write", "festmaterial", "schreiben", "Materialstamm und Wareneingang bearbeiten"),
+    ("materials.reserve", "festmaterial", "reservieren", "Materialreservationen verbindlich bestätigen"),
+    ("materials.issue", "festmaterial", "ausgeben", "Material ausgeben, zurücknehmen und Transporte führen"),
+    ("materials.correct", "festmaterial", "korrigieren", "Bestandskorrekturen buchen"),
+    ("reports.festivals", "reporting", "lesen", "Fest- und Materialreporting lesen"),
 )
 
 PERMISSION_CODES = tuple(item[0] for item in PERMISSIONS)
@@ -74,6 +84,7 @@ REPORT_SECTIONS = (
     "service",
     "marketing",
     "work",
+    "festivals",
 )
 
 ROLES: tuple[tuple[str, str, str], ...] = (
@@ -82,6 +93,7 @@ ROLES: tuple[tuple[str, str, str], ...] = (
     ("vertrieb", "Vertrieb", "Partner, Kontakte, Verkauf, Bestellungen und zugewiesene Tickets."),
     ("marketing", "Marketing", "Kampagnen, Segmente, Kommunikationspräferenzen und Marketing-Reporting."),
     ("kundenservice", "Kundenservice", "Tickets, zugehörige Stammdaten, Serviceaufgaben und Service-Reporting."),
+    ("logistik", "Logistik", "Festmaterial, Reservationen, Ausgaben, Rücknahmen und Transporte."),
 )
 
 
@@ -107,7 +119,9 @@ ROLE_DEFAULTS: dict[str, frozenset[str]] = {
             "reports.service",
             "reports.marketing",
             "reports.work",
+            "reports.festivals",
             "reports.export",
+            "festivals.confirm",
         }
     ),
     "vertrieb": frozenset(
@@ -136,6 +150,10 @@ ROLE_DEFAULTS: dict[str, frozenset[str]] = {
             "preferences.read",
             "care.read",
             "care.write",
+            "festivals.read",
+            "festivals.write",
+            "festivals.confirm",
+            "materials.read",
         }
     ),
     "marketing": frozenset(
@@ -153,6 +171,7 @@ ROLE_DEFAULTS: dict[str, frozenset[str]] = {
             "preferences.write",
             "reports.marketing",
             "reports.export",
+            "festivals.read",
         }
     ),
     "kundenservice": frozenset(
@@ -169,6 +188,21 @@ ROLE_DEFAULTS: dict[str, frozenset[str]] = {
             "tickets.write",
             "reports.service",
             "reports.export",
+            "festivals.read",
+        }
+    ),
+    "logistik": frozenset(
+        {
+            *_COMMON,
+            "festivals.read",
+            "materials.read",
+            "materials.write",
+            "materials.reserve",
+            "materials.issue",
+            "materials.correct",
+            "tasks.read",
+            "tasks.write",
+            "partners.read",
         }
     ),
 }
@@ -192,6 +226,58 @@ MODULES = {
     "engagement": "dashboard",
     "preferences": "preferences",
 }
+
+
+def _festival_permission(method: str, path: str) -> tuple[str, ...]:
+    parts = [part for part in path.split("/") if part]
+    tail = parts[2:]
+    if not tail:
+        if method in {"GET", "HEAD"}:
+            return ("festivals.read",)
+        return ("festivals.write",)
+    head = tail[0]
+    last = tail[-1]
+    if head == "dashboard":
+        return ("festivals.read", "reports.festivals")
+    if head == "calendar":
+        return ("festivals.read",)
+    if head == "materials":
+        if method in {"GET", "HEAD"}:
+            return ("materials.read", "festivals.read")
+        if last == "stock":
+            return ("materials.write", "materials.correct")
+        return ("materials.write",)
+    if head == "reservations":
+        if method in {"GET", "HEAD"} or last == "check":
+            return ("materials.read", "festivals.read", "materials.reserve")
+        if last in {"confirm", "cancel", "replace"}:
+            return ("materials.reserve",)
+        if last in {"issue", "return"}:
+            return ("materials.issue",)
+        return ("festivals.write", "materials.reserve")
+    if head == "quotes":
+        if method in {"GET", "HEAD"} or last == "pdf":
+            return ("festivals.read",)
+        if last == "accept":
+            return ("festivals.confirm",)
+        return ("festivals.write",)
+    if head == "deliveries":
+        if method in {"GET", "HEAD"} or last == "pdf":
+            return ("festivals.read", "materials.read")
+        return ("materials.issue", "festivals.write")
+    if head == "assignments":
+        if method in {"GET", "HEAD"}:
+            return ("festivals.read",)
+        return ("festivals.write", "materials.issue")
+    if head == "movements":
+        return ("materials.read",)
+    if method in {"GET", "HEAD"}:
+        return ("festivals.read",)
+    if last in {"archive", "restore"}:
+        return ("festivals.archive",)
+    if last in {"convert", "close"}:
+        return ("festivals.confirm",)
+    return ("festivals.write",)
 
 
 def permission_needed(method: str, path: str) -> str | tuple[str, ...]:
@@ -228,6 +314,8 @@ def permission_needed(method: str, path: str) -> str | tuple[str, ...]:
         return "user"
     if path.startswith("/api/reports"):
         return tuple(code for code in PERMISSION_CODES if code.startswith("reports.") and code != "reports.export")
+    if path.startswith("/api/festivals"):
+        return _festival_permission(method, path)
     if path.startswith("/api/integration"):
         if method == "GET":
             return ("integration.read",)

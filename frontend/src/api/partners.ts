@@ -175,7 +175,7 @@ export async function fetchPartners(query: PartnerQuery): Promise<PartnerList> {
   if (query.page > 1) {
     params.set('page', String(query.page))
   }
-  params.set('page_size', '20')
+  params.set('page_size', String(query.pageSize ?? 20))
   if (query.includeArchived) {
     params.set('include_archived', 'true')
   }

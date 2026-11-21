@@ -43,6 +43,18 @@ import { ProfilePage } from './pages/auth/ProfilePage.tsx'
 import { ResetPage } from './pages/auth/ResetPage.tsx'
 import { ReportingPage } from './pages/reporting/ReportingPage.tsx'
 import { IntegrationConflictsPage, IntegrationJobPage, IntegrationJobsPage, IntegrationOverviewPage, IntegrationPreviewPage } from './pages/integration/IntegrationPages.tsx'
+import {
+  AssignmentListPage,
+  DeliveryListPage,
+  FestivalCalendarPage,
+  FestivalDashboardPage,
+  FestivalDetailPage,
+  FestivalFormPage,
+  FestivalListPage,
+  MaterialPage,
+  QuoteListPage,
+  ReservationListPage,
+} from './pages/festivals/FestivalPages.tsx'
 import { AuditPage, RolesPage, UserCreatePage, UserDetailPage, UserListPage } from './pages/users/UserPages.tsx'
 
 export default function App() {
@@ -115,6 +127,18 @@ export default function App() {
               <Route path="integration/laeufe" element={<IntegrationJobsPage />} />
               <Route path="integration/konflikte" element={<IntegrationConflictsPage />} />
               <Route path="integration" element={<IntegrationOverviewPage />} />
+              <Route path="festmanagement/neu" element={<FestivalFormPage />} />
+              <Route path="festmanagement/:festivalId/bearbeiten" element={<FestivalFormPage />} />
+              <Route path="festmanagement/kalender" element={<FestivalCalendarPage />} />
+              <Route path="festmanagement/anfragen" element={<FestivalListPage mode="requests" />} />
+              <Route path="festmanagement/offerten" element={<QuoteListPage />} />
+              <Route path="festmanagement/material" element={<MaterialPage />} />
+              <Route path="festmanagement/reservationen" element={<ReservationListPage />} />
+              <Route path="festmanagement/transporte" element={<DeliveryListPage />} />
+              <Route path="festmanagement/einsaetze" element={<AssignmentListPage />} />
+              <Route path="festmanagement/auswertungen" element={<FestivalDashboardPage />} />
+              <Route path="festmanagement/:festivalId" element={<FestivalDetailPage />} />
+              <Route path="festmanagement" element={<FestivalListPage />} />
               <Route path="profil" element={<ProfilePage />} />
               <Route path="benutzer/neu" element={<UserCreatePage />} />
               <Route path="benutzer/rollen" element={<RolesPage />} />

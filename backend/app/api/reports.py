@@ -21,6 +21,7 @@ SECTION_TITLES = {
     "service": "Kundenservice",
     "marketing": "Marketing",
     "work": "Aktivitäten und Aufgaben",
+    "festivals": "Festmanagement",
 }
 
 

@@ -261,6 +261,7 @@ const navIcons = {
   automations: AutomationsIcon,
   notices: NoticesIcon,
   materials: MaterialsIcon,
+  festivals: MaterialsIcon,
   reporting: ReportingIcon,
   integration: IntegrationIcon,
   users: UsersIcon,

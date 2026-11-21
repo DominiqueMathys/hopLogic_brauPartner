@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import { LinkedActivities, LinkedTasks, PartnerContacts } from '../../components/crm/LinkedRecords.tsx'
 import { PartnerDeals, PartnerOrders } from '../../components/sales/RelatedRecords.tsx'
+import { PartnerFestivals } from '../festivals/FestivalPages.tsx'
 import { PartnerAnalysisPanel, PartnerService } from '../../components/service/RelatedService.tsx'
 import { ApiError, archivePartner, restorePartner } from '../../api/partners.ts'
 import { Badge } from '../../components/ui/Badge.tsx'
@@ -156,6 +157,11 @@ export function PartnerDetailPage() {
               id: 'orders',
               label: 'Bestellungen',
               content: <PartnerOrders partnerId={partner.id} />,
+            },
+            {
+              id: 'festivals',
+              label: 'Feste',
+              content: <PartnerFestivals partnerId={partner.id} />,
             },
             {
               id: 'service',

@@ -29,6 +29,15 @@ Die Suite prüft unter anderem:
 - Reporting, Export, Anmeldung, Passwort-Reset, CSRF und Rollen
 - Mock-ERP: Verbindung, Vorschau ohne Schreiben, Import, Konflikte, Übertragung, Idempotenz, begrenzte Wiederholungen, Hintergrundlauf
 - einen zusammenhängenden Ablauf von Partner bis Mock-Status, Abmelden und erneutem Anmelden
+- Fest anlegen, Offerte und Version, Verfügbarkeit, überlappende und gleichzeitige Reservationen, Ausgabe, teilweise Rücknahme, beschädigtes und fehlendes Material, doppelte Rückbuchung, Kalender, Transport, Einsatzüberschneidung, Rücknahmeaufgabe, Rollen, Kennzahlen und Persistenz
+
+## Festmanagement, Stand 15. November 2026
+
+`pytest` ergab 70 bestandene Tests. `npm run lint` meldete nur die bereits bekannten Hinweise zu Fast Refresh in `auth.tsx` und `ReportChart.tsx`. `npm run build` war erfolgreich. Die Migration `0009_festivals` ist der aktuelle Kopf.
+
+Im Browser wurde der Ablauf als Administrator geprüft: Festanfrage «Abnahme Festphase 2027», Veranstalter Eventorganisation Seeblick, Getränkehändler Getränkehandel Alpenblick, Verfügbarkeit 500 von 500 Festgläsern, Offerte über CHF 5.41 inkl. 8,1 % MWST, Auftrag und Reservation bestätigt, Lieferung geplant, 10 Gläser ausgegeben, Rücknahme 7 gut, 2 beschädigt und 1 fehlend, Fest abgeschlossen. Die Auswertung zeigte danach 2 beschädigte und 1 fehlende Einheit sowie 497 nutzbare Gläser. Der Kalender zeigte das Fest im August 2027. Die Partnerseite listete die zugeordneten Feste. Nach einem API-Neustart wurden dieselben Zeilen erneut gelesen.
+
+Docker Compose wurde in dieser Phase nicht gestartet. Die Anwendung ist damit nicht produktiv freigegeben.
 
 ## Manuell
 

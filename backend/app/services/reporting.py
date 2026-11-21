@@ -656,6 +656,51 @@ def build_report(
         "Aktueller Bestand.",
     )
 
+    if "festivals" in allowed:
+        from app.services.festival import dashboard as festival_dashboard
+
+        metrics = festival_dashboard(db)
+        add_kpi("festivals", "planned", "Geplante Feste", str(metrics["planned"]), "count", "Nicht archivierte Feste mit offenem oder bestätigtem Status.")
+        add_kpi("festivals", "confirmed", "Bestätigte Feste", str(metrics["confirmed"]), "count", "Feststatus bestätigt.")
+        add_kpi("festivals", "open_requests", "Offene Festanfragen", str(metrics["open_requests"]), "count", "Anfragen vor dem Abschluss.")
+        add_kpi("festivals", "open_quotes", "Offene Offerten", str(metrics["open_quotes"]), "count", "Entwurf, Prüfung oder versendet.")
+        add_kpi("festivals", "reservations", "Materialreservationen", str(metrics["reservations"]), "count", "Reservationen ohne Storno.")
+        add_kpi("festivals", "overdue_returns", "Überfällige Rücknahmen", str(metrics["overdue_returns"]), "count", "Ausgabe liegt über dem Festende.")
+        add_kpi("festivals", "damaged", "Beschädigtes Material", str(metrics["damaged"]), "count", "Defekter Bestand, nicht wieder verfügbar.")
+        add_kpi("festivals", "missing", "Fehlendes Material", str(metrics["missing"]), "count", "Offene Fehlmengen.")
+        add_kpi("festivals", "open_transports", "Offene Transporte", str(metrics["open_transports"]), "count", "Transporte vor dem Abschluss.")
+        add_kpi("festivals", "open_assignments", "Offene Einsätze", str(metrics["open_assignments"]), "count", "Geplante oder bestätigte Einsätze.")
+        add_chart(
+            "festivals",
+            "festivals_month",
+            "Feste pro Monat",
+            "bar",
+            "count",
+            count_points([(item["label"], int(item["count"])) for item in metrics["by_month"]]),
+            "Nach Beginn im Kalender Europe/Zurich.",
+        )
+        add_table(
+            "festivals",
+            "utilization",
+            "Materialauslastung der nächsten 30 Tage",
+            [
+                {"key": "material", "label": "Material"},
+                {"key": "usable", "label": "Nutzbar"},
+                {"key": "held", "label": "Belegt"},
+                {"key": "percent", "label": "Auslastung"},
+            ],
+            [
+                {
+                    "material": str(item["material"]),
+                    "usable": str(item["usable"]),
+                    "held": str(item["held"]),
+                    "percent": f"{item['percent']} %",
+                }
+                for item in metrics["utilization"]
+            ],
+            "Berechnet aus Bestand und überlappenden Reservationen. Keine ERP-Livebestände.",
+        )
+
     options = {
         "regions": sorted({row.region for row in partners if row.archived_at is None and row.region}),
         "partner_types": sorted({row.partner_type for row in partners if row.archived_at is None and row.partner_type}),

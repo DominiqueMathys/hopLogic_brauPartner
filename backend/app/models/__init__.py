@@ -5,6 +5,23 @@ Import new model modules here so Alembic can discover them on Base.metadata.
 
 from app.database import Base
 from app.models.activity import Activity
+from app.models.festival import (
+    Festival,
+    FestivalAssignment,
+    FestivalChange,
+    FestivalDelivery,
+    FestivalMaterial,
+    FestivalQuote,
+    FestivalQuoteItem,
+    MaterialAsset,
+    MaterialCategory,
+    MaterialIssue,
+    MaterialMovement,
+    MaterialReservation,
+    MaterialReservationLine,
+    MaterialReturn,
+    NumberRange,
+)
 from app.models.identity import AuditLog, PasswordReset, Permission, Role, RolePermission, User, UserSession
 from app.models.contact import CompanyContact, Contact
 from app.models.integration import (
@@ -67,6 +84,21 @@ __all__ = [
     "ErpOrderTransfer",
     "ErpSyncJob",
     "ErpSyncRecord",
+    "Festival",
+    "FestivalAssignment",
+    "FestivalChange",
+    "FestivalDelivery",
+    "FestivalMaterial",
+    "FestivalQuote",
+    "FestivalQuoteItem",
+    "MaterialAsset",
+    "MaterialCategory",
+    "MaterialIssue",
+    "MaterialMovement",
+    "MaterialReservation",
+    "MaterialReservationLine",
+    "MaterialReturn",
+    "NumberRange",
     "Deal",
     "DealStageHistory",
     "MarketingCampaign",

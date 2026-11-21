@@ -158,6 +158,8 @@ def perform_action(db: Session, rule: AutomationRule, context: dict) -> dict:
             ),
         )
         task.origin = "automation"
+        if context.get("event_id"):
+            task.event_id = context["event_id"]
         db.flush()
         notice = _notify(
             db,
@@ -245,6 +247,10 @@ def _time_subjects(db: Session, trigger: str, days: int, now: datetime, today) -
     elif trigger == "task_due_soon":
         for task in open_tasks_due_soon(db, now, days):
             subjects.append(_task_subject(task, "task_due_soon"))
+    elif trigger.startswith("festival_"):
+        from app.services.festival import festival_time_subjects
+
+        subjects.extend(festival_time_subjects(db, trigger, days, now))
     return subjects
 
 

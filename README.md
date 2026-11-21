@@ -2,7 +2,7 @@
 
 CRM-Webanwendung für das FHGR-Projekt «HopLogic BrauPartner» des Liechtensteiner Brauhauses.
 
-Die Anwendung verbindet eine React-Oberfläche mit einer FastAPI-Schnittstelle und PostgreSQL. Sie umfasst Vertriebspartner, Kontakte, Aktivitäten, Aufgaben, Verkaufschancen, Produkte, Bestellungen, Kundenservice, Marketing, Automatisierungen, Reporting, Anmeldung mit Rollen und eine ERP-Testintegration. Das Mock-ERP ist eine lokale Testdatenbank mit fiktiven Daten. Es ist keine Verbindung zum ERP des Liechtensteiner Brauhauses.
+Die Anwendung verbindet eine React-Oberfläche mit einer FastAPI-Schnittstelle und PostgreSQL. Sie umfasst Vertriebspartner, Kontakte, Aktivitäten, Aufgaben, Verkaufschancen, Produkte, Bestellungen, Kundenservice, Marketing, Automatisierungen, Festmanagement mit Festmaterial, Reporting, Anmeldung mit Rollen und eine ERP-Testintegration. Das Mock-ERP ist eine lokale Testdatenbank mit fiktiven Daten. Es ist keine Verbindung zum ERP des Liechtensteiner Brauhauses.
 
 Die Anwendung ist für die lokale Entwicklung, automatisierte Tests und eine kontrollierte Demo vorbereitet. Sie ist damit nicht als produktiv freigegeben.
 
@@ -75,6 +75,13 @@ $env:PYTHONPATH = "backend"
 Das Passwort wird nur in die gitignorierte Datei `data/local-dev-access.txt` geschrieben. Es gehört nicht ins Repository und nicht in die Dokumentation. Demo-Konten entstehen nur, wenn `ENVIRONMENT` auf `development` steht. Für eine andere Umgebung `CREATE_DEMO_USERS=0` setzen.
 
 Fiktive CRM-Daten laden die Skripte unter `scripts\`. Sie sind wiederholbar und erzeugen keine Dubletten. Ein erneutes Laden darf eine bereits übertragene Demo-Bestellung nicht unbedacht zurücksetzen. Die Skripte deshalb nicht gegen eine Datenbank ausführen, deren Demo-Ablauf erhalten bleiben soll.
+
+Das fiktive Fest «Sommerfest am See 2027» lädt dieser Befehl. Er ist wiederholbar und verändert keine bestehenden Bestellungen:
+
+```powershell
+$env:PYTHONPATH = "backend"
+.\.venv\Scripts\python.exe -m app.seed_festivals
+```
 
 ## Tests
 

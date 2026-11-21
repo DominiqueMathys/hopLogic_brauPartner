@@ -58,6 +58,15 @@ export const triggerOptions: Choice[] = [
   { value: 'no_contact', label: 'Kein Kundenkontakt seit einer Anzahl Tage' },
   { value: 'no_order', label: 'Keine Bestellung seit einer Anzahl Tage' },
   { value: 'ticket_stale', label: 'Service-Ticket seit einer Zeit unbearbeitet' },
+  { value: 'festival_request_created', label: 'Neue Festanfrage erfasst' },
+  { value: 'festival_quote_accepted', label: 'Festofferte angenommen' },
+  { value: 'festival_material_short', label: 'Festmaterial nicht vollständig verfügbar' },
+  { value: 'festival_material_damaged', label: 'Festmaterial beschädigt zurückgegeben' },
+  { value: 'festival_quote_waiting', label: 'Festofferte seit einer Anzahl Tage unbeantwortet' },
+  { value: 'festival_starts_soon', label: 'Fest beginnt in einer Anzahl Tage' },
+  { value: 'festival_delivery_due', label: 'Festlieferung in einer Anzahl Tage' },
+  { value: 'festival_ended', label: 'Fest beendet, Rücknahme offen' },
+  { value: 'festival_return_overdue', label: 'Materialrücknahme überfällig' },
 ]
 
 export const actionOptions: Choice[] = [

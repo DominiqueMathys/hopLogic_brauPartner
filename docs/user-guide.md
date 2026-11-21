@@ -42,6 +42,16 @@ Kampagnen haben Zielgruppe, Kanal und Budget. Ein Kontakt ohne dokumentierte Ein
 
 Eine aktive Automatisierung kann beim Anlegen eines Deals eine Aufgabe erzeugen. Die Aufgabe erscheint bei den Aufgaben des Partners. Benachrichtigungen lassen sich in der Kopfzeile öffnen. Die lokale Regel «Erstkontakt vorbereiten» ist ein Demo-Datensatz und soll nicht unbedacht deaktiviert werden.
 
+## Festmanagement
+
+«Festmanagement» enthält Übersicht, Kalender, Anfragen, Offerten, Material, Reservationen, Transporte, Einsätze und Auswertungen. Ein Veranstalter ist nicht automatisch ein Bierkunde. Der Getränkehändler wird getrennt zugeordnet.
+
+Mengenmaterial wird mit einer Stückzahl erfasst. Ein Einzelstück, zum Beispiel eine Zapfanlage, wird über seine Inventarnummer gewählt. Eine neue Anfrage reserviert noch nichts. Die Offerte verwendet frei eingegebene Richtpreise und einen Mehrwertsteuersatz. Das sind keine Preise des Brauhauses. Nach der Annahme bestätigt eine berechtigte Person den Festauftrag. Erst danach lässt sich die Reservation verbindlich buchen. Ein Konflikt nennt die bereits belegte Menge.
+
+Die Ausgabe erfasst die tatsächlich ausgegebene Menge einmal. Nach dem Fest bleibt das Material ausgegeben, bis jemand die Rücknahme kontrolliert. Zurückgegebene, beschädigte und fehlende Mengen werden getrennt gespeichert. Nur die unbeschädigte Menge ist wieder verfügbar. Ein Liefertermin setzt den Transport nicht von selbst auf geliefert.
+
+Das Beispiel «Sommerfest am See 2027» ist fiktiv. Es gehört zur Eventorganisation Seeblick und zum Getränkehandel Alpenblick.
+
 ## Reporting
 
 Berichte lassen sich nach Zeitraum und Ausschnitt filtern. Exportiert wird nur, wer das Exportrecht hat. Ein Export ohne Recht wird abgelehnt und protokolliert, ohne den Bericht auszuliefern.

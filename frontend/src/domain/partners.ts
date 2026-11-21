@@ -77,6 +77,7 @@ export type PartnerQuery = {
   sort: 'name' | 'created_at' | 'last_activity'
   direction: 'asc' | 'desc'
   page: number
+  pageSize?: number
   includeArchived: boolean
 }
 

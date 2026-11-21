@@ -51,6 +51,10 @@ EVENT_TRIGGERS = (
     "ticket_created",
     "ticket_priority_changed",
     "order_created",
+    "festival_request_created",
+    "festival_quote_accepted",
+    "festival_material_short",
+    "festival_material_damaged",
 )
 
 TIME_TRIGGERS = (
@@ -59,6 +63,11 @@ TIME_TRIGGERS = (
     "no_contact",
     "no_order",
     "ticket_stale",
+    "festival_quote_waiting",
+    "festival_starts_soon",
+    "festival_delivery_due",
+    "festival_ended",
+    "festival_return_overdue",
 )
 
 AUTOMATION_TRIGGERS = EVENT_TRIGGERS + TIME_TRIGGERS

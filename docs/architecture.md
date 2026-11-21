@@ -52,7 +52,7 @@ Unbekannte `/api`-Pfade sind standardmässig gesperrt. SQLAlchemy verwendet gebu
 
 ## Datenbank
 
-PostgreSQL 16 hält die CRM-Daten. Alembic führt die Migrationen `0001_initial` bis `0008_integration` in einer Kette. `alembic heads` zeigt genau `0008_integration`.
+PostgreSQL 16 hält die CRM-Daten. Alembic führt die Migrationen `0001_initial` bis `0009_festivals` in einer Kette. `alembic heads` zeigt genau `0009_festivals`.
 
 Fremdschlüssel verbinden Kontakte, Aktivitäten, Aufgaben, Deals, Bestellungen, Tickets, Kampagnen und ERP-Protokolle mit den Partnern. Bestellpositionen speichern Preis, Menge und Steuer zum Zeitpunkt der Bestellung. Eine spätere Katalogänderung schreibt diese Positionen nicht um.
 
@@ -75,3 +75,19 @@ Ein externer Connector ist nicht registriert und öffnet keine Verbindung. Der M
 Führend ist die externe Quelle für ERP-Kundennummer, ERP-Kundenstatus, Artikelnummer und den aktuellen Katalogpreis. Führend ist das CRM für Notizen, Aktivitäten, Aufgaben, Segmente, Betreuung und den CRM-Partnerstatus. Abweichende, bereits gefüllte Stammdaten werden nicht überschrieben. Sie erscheinen als Konflikt.
 
 Der CRM-Bestellstatus und der technische Übertragungsstatus sind getrennte Felder. Eine erfolgreiche Übertragung ist keine Lieferung und keine Rechnung. Der Übertragungsschlüssel ist `crm-{Bestell-ID}`. Eine unklare Antwort wird nicht erneut gesendet, sondern zur manuellen Prüfung markiert. Neue Mock-Referenzen enthalten ein Kennzeichen der Testdatei, damit ein neues Mock-ERP keine bereits gespeicherte Referenz wiederverwendet.
+
+## Festmanagement
+
+Festanfrage und Festauftrag sind derselbe Datensatz. Solange `is_binding` falsch ist, ist es eine Anfrage. Eine Anfrage und eine Offerte reservieren kein Material. Verbindlich wird der Auftrag erst nach einer angenommenen Offerte. Die Reservation wird danach erneut geprüft und separat bestätigt.
+
+Die Verfügbarkeit ist keine gespeicherte Spalte. Nutzbar ist Gesamtbestand minus defekt, gesperrt und fehlend. Davon werden bestätigte, ausgegebene und teilweise zurückgegebene Reservationen abgezogen, deren Zeitraum sich inklusive Vorbereitung, Rücktransport und Reinigung überschneidet. Noch ausgegebenes Material bleibt bis zur bestätigten Rücknahme belegt. Ein anderer Lagerort gilt als nicht verfügbar.
+
+Die Bestätigung sperrt zuerst die Reservation und danach die betroffenen Materialzeilen mit `FOR UPDATE`. Reicht der Bestand nicht, bleibt der Status «teilweise verfügbar» und die API antwortet mit 409. Zwei gleichzeitige Bestätigungen der letzten Menge können dadurch nicht beide erfolgreich sein.
+
+Die Ausgabe ist je Reservation einmalig. Die Rücknahme bucht nur die erfasste gute Menge zurück. Beschädigtes Material erhöht den defekten Bestand, fehlendes den offenen Verlust. Eine zweite vollständige Rücknahme wird abgelehnt. Das Festende erzeugt eine Rücknahmeaufgabe, es bucht das Material nicht selbst zurück.
+
+Material kann eine Artikelnummer für eine spätere ERP-Synchronisation tragen. Ohne Connector bleibt dieses Feld leer. Die Oberfläche bezeichnet Bestände als lokale CRM-Daten.
+
+Die Rolle Logistik liest Feste und führt Bestand, Reservation, Ausgabe und Rücknahme. Vertrieb führt Anfragen und Offerten. Marketing und Kundenservice lesen Feste. Die Geschäftsleitung sieht Auswertung und Freigaben. Administratoren haben alle Rechte. Die Prüfung erfolgt in der API, nicht nur in der Navigation.
+
+Der Kalender ist eine eigene Monats-, Wochen-, Tages- und Listenansicht. Offerte und Lieferschein sind einfache PDF-Dateien ohne Bilder. Beides bleibt in der bestehenden Oberfläche.

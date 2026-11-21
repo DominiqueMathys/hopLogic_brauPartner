@@ -57,6 +57,7 @@ class ServiceTicket(Base):
     partner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("vertriebspartner.id", ondelete="RESTRICT"), nullable=False)
     contact_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("kontakte.id", ondelete="RESTRICT"))
     order_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("bestellungen.id", ondelete="RESTRICT"))
+    event_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("feste.id", ondelete="RESTRICT"))
     account_owner: Mapped[str | None] = mapped_column(String(120))
     owner_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("benutzer.id", ondelete="SET NULL"))
     priority: Mapped[str] = mapped_column(String(20), nullable=False, default="normal")

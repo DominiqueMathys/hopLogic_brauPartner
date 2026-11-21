@@ -110,11 +110,11 @@ export const navigation: NavItem[] = [
     phase: 'available',
   },
   {
-    id: 'materials',
-    label: 'Festmaterial',
-    path: '/festmaterial',
-    summary: 'Material für Feste und Einsätze.',
-    phase: 'planned',
+    id: 'festivals',
+    label: 'Festmanagement',
+    path: '/festmanagement',
+    summary: 'Festanfragen, Offerten, Materialreservationen und Rücknahmen. Ein Veranstalter ist nicht automatisch ein Bierkunde.',
+    phase: 'available',
   },
   {
     id: 'reporting',
@@ -152,7 +152,7 @@ export function currentNavItem(pathname: string): NavItem | undefined {
 
 export function navAllowed(item: NavItem, can: (permission: string) => boolean): boolean {
   if (item.id === 'reporting') {
-    return ['overview', 'sales', 'partners', 'orders', 'service', 'marketing', 'work'].some((section) => can(`reports.${section}`))
+    return ['overview', 'sales', 'partners', 'orders', 'service', 'marketing', 'work', 'festivals'].some((section) => can(`reports.${section}`))
   }
   if (item.id === 'users') return can('users.manage') || can('roles.read') || can('audit.read')
   if (item.id === 'integration') return can('integration.read')
@@ -170,6 +170,7 @@ export function navAllowed(item: NavItem, can: (permission: string) => boolean):
     care: 'care.read',
     automations: 'automations.read',
     notices: 'notifications.read',
+    festivals: 'festivals.read',
   }
   const permission = required[item.id]
   return permission ? can(permission) : true

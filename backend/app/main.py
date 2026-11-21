@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.authorize import authorize
 
 from app.api.activities import router as activities_router
+from app.api.festival import router as festival_router
 from app.api.contacts import router as contacts_router
 from app.api.engagement import (
     automations_router,
@@ -80,6 +81,7 @@ app.include_router(audit_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
 app.include_router(integration_router, prefix="/api")
 app.include_router(partners_router, prefix="/api")
+app.include_router(festival_router, prefix="/api")
 app.include_router(contacts_router, prefix="/api")
 app.include_router(activities_router, prefix="/api")
 app.include_router(tasks_router, prefix="/api")

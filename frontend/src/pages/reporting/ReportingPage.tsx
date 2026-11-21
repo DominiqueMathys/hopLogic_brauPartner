@@ -17,6 +17,7 @@ const SECTIONS = [
   { id: 'service', label: 'Kundenservice', permission: 'reports.service' },
   { id: 'marketing', label: 'Marketing', permission: 'reports.marketing' },
   { id: 'work', label: 'Aktivitäten und Aufgaben', permission: 'reports.work' },
+  { id: 'festivals', label: 'Festmanagement', permission: 'reports.festivals' },
 ]
 
 function initialQuery(): ReportQuery {
